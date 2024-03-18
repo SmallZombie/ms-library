@@ -1,0 +1,201 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+	<title>详情 - 皮肤收藏馆</title>
+	<link rel="shortcut icon" href="./favicon.svg" type="image/x-icon">
+	<link rel="stylesheet" href="./resource/style/global.css">
+	<link rel="stylesheet" href="./resource/style/details.css">
+</head>
+
+<body>
+	<main>
+		<div class="header">
+			<div class="btnGroup">
+				<button title="返回" class="back">
+					<svg width="24" height="24" viewBox="0 0 48 48" fill="none" xmlns="http://www.w3.org/2000/svg"><path d="M12.9998 8L6 14L12.9998 21" stroke="#4a90e2" stroke-width="4" stroke-linecap="round" stroke-linejoin="round"/><path d="M6 14H28.9938C35.8768 14 41.7221 19.6204 41.9904 26.5C42.2739 33.7696 36.2671 40 28.9938 40H11.9984" stroke="#4a90e2" stroke-width="4" stroke-linecap="round" stroke-linejoin="round"/></svg>
+				</button>
+			</div>
+			<p></p>
+			<!-- 占位用的空元素 -->
+			<div></div>
+		</div>
+		<div class="content">
+			<canvas class="skin-3d" width="300" height="400" data-id="temp" data-theta="-330" data-phi="-1"></canvas>
+			<img src="" alt="view" style="display: none;">
+
+			<div class="right">
+				<div class="btnGroup">
+					<button id="play-pause-btn" title="开始播放" class="play" style="display: none;">
+						<svg width="24" height="24" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg"><path d="M5 12V3L12.5 7.5L20 12L12.5 16.5L5 21V12Z" stroke="white" stroke-width="2" stroke-linejoin="round"/></svg>
+						<svg width="24" height="24" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg"><path d="M6 4V20" stroke="white" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/><path d="M17 4V20" stroke="white" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg>
+						<span>播放</span>
+					</button>
+					<button title="下载皮肤原图" class="downloadSkinImg" style="display: none;">
+						<svg width="24" height="24" viewBox="0 0 48 48" fill="none" xmlns="http://www.w3.org/2000/svg"><path d="M44 24C44 22.8954 43.1046 22 42 22C40.8954 22 40 22.8954 40 24H44ZM24 8C25.1046 8 26 7.10457 26 6C26 4.89543 25.1046 4 24 4V8ZM39 40H9V44H39V40ZM8 39V9H4V39H8ZM40 24V39H44V24H40ZM9 8H24V4H9V8ZM9 40C8.44772 40 8 39.5523 8 39H4C4 41.7614 6.23857 44 9 44V40ZM39 44C41.7614 44 44 41.7614 44 39H40C40 39.5523 39.5523 40 39 40V44ZM8 9C8 8.44772 8.44771 8 9 8V4C6.23858 4 4 6.23857 4 9H8Z" fill="#ffffff"/><path d="M6 35L16.6931 25.198C17.4389 24.5143 18.5779 24.4953 19.3461 25.1538L32 36" stroke="#ffffff" stroke-width="4" stroke-linecap="round" stroke-linejoin="round"/><path d="M28 31L32.7735 26.2265C33.4772 25.5228 34.5914 25.4436 35.3877 26.0408L42 31" stroke="#ffffff" stroke-width="4" stroke-linecap="round" stroke-linejoin="round"/><path d="M32 13L37 18L42 13" stroke="#ffffff" stroke-width="4" stroke-linecap="round" stroke-linejoin="round"/><path d="M37 6L37 18" stroke="#ffffff" stroke-width="4" stroke-linecap="round" stroke-linejoin="round"/></svg>
+						<span>下载皮肤原图</span>
+					</button>
+					<button title="下载当前预览图" class="downloadViewImg">
+						<svg width="24" height="24" viewBox="0 0 48 48" fill="none" xmlns="http://www.w3.org/2000/svg"><path d="M27 40H7C5.34315 40 4 38.6569 4 37V11C4 9.34315 5.34315 8 7 8H41C42.6569 8 44 9.34315 44 11V24" stroke="#ffffff" stroke-width="4" stroke-linecap="round" stroke-linejoin="round"/><path d="M34 36L39 41L44 36" stroke="#ffffff" stroke-width="4" stroke-linecap="round" stroke-linejoin="round"/><path d="M39 29L39 41" stroke="#ffffff" stroke-width="4" stroke-linecap="round" stroke-linejoin="round"/><path d="M4 11C4 9.34315 5.34315 8 7 8H41C42.6569 8 44 9.34315 44 11V20H4V11Z" fill="none" stroke="#ffffff" stroke-width="4"/><circle r="2" transform="matrix(-1.31134e-07 -1 -1 1.31134e-07 10 14)" fill="#ffffff"/><circle r="2" transform="matrix(-1.31134e-07 -1 -1 1.31134e-07 16 14)" fill="#ffffff"/></svg>
+						<span>下载当前预览图</span>
+					</button>
+					<button title="为当前皮肤重命名" class="rename">
+						<svg width="24" height="24" viewBox="0 0 48 48" fill="none" xmlns="http://www.w3.org/2000/svg"><rect x="4" y="9" width="40" height="30" rx="2" fill="none" stroke="#ffffff" stroke-width="4"/><path d="M16 9V39" stroke="#ffffff" stroke-width="4" stroke-linecap="round" stroke-linejoin="round"/><path d="M20 9H12" stroke="#ffffff" stroke-width="4" stroke-linecap="round"/><path d="M20 39H12" stroke="#ffffff" stroke-width="4" stroke-linecap="round"/><path d="M23 31L37 17" stroke="#ffffff" stroke-width="4" stroke-linecap="round" stroke-linejoin="round"/><path d="M25 19L23 17" stroke="#ffffff" stroke-width="4" stroke-linecap="round" stroke-linejoin="round"/><path d="M37 31L35 29" stroke="#ffffff" stroke-width="4" stroke-linecap="round" stroke-linejoin="round"/></svg>
+						<span>重命名</span>
+					</button>
+					<button title="切换手臂样式(经典/纤细)" class="switchArmStyle" style="display: none;">
+						<svg width="24" height="24" viewBox="0 0 48 48" fill="none" xmlns="http://www.w3.org/2000/svg"><path d="M42 19H5.99998" stroke="#ffffff" stroke-width="4" stroke-linecap="round" stroke-linejoin="round"/><path d="M30 7L42 19" stroke="#ffffff" stroke-width="4" stroke-linecap="round" stroke-linejoin="round"/><path d="M6.79897 29H42.799" stroke="#ffffff" stroke-width="4" stroke-linecap="round" stroke-linejoin="round"/><path d="M6.79895 29L18.799 41" stroke="#ffffff" stroke-width="4" stroke-linecap="round" stroke-linejoin="round"/></svg>
+						<span>切换为...</span>
+					</button>
+					<button title="删除当前皮肤(永久)" class="delete" style="color: red;">
+						<svg width="24" height="24" viewBox="0 0 48 48" fill="none" xmlns="http://www.w3.org/2000/svg"><path d="M9 10V44H39V10H9Z" fill="none" stroke="#ffffff" stroke-width="4"stroke-linejoin="round" /><path d="M20 20V33" stroke="#ffffff" stroke-width="4" stroke-linecap="round"stroke-linejoin="round" /><path d="M28 20V33" stroke="#ffffff" stroke-width="4" stroke-linecap="round"stroke-linejoin="round" /><path d="M4 10H44" stroke="#ffffff" stroke-width="4" stroke-linecap="round"stroke-linejoin="round" /><path d="M16 10L19.289 4H28.7771L32 10H16Z" fill="none" stroke="#ffffff" stroke-width="4"stroke-linejoin="round" /></svg>
+						<span>删除</span>
+					</button>
+				</div>
+				<div class="editTime" style="display: none;">
+					<span>修改日期：</span>
+					<span>...</span>
+				</div>
+				<div class="uploadTime">
+					<span>上传日期：</span>
+					<span>...</span>
+				</div>
+				<div class="from">
+					<span>来源：</span>
+					<span>...</span>
+				</div>
+			</div>
+		</div>
+	</main>
+
+	<script src="./resource/javascript/global.js"></script>
+	<script src="./resource/javascript/jquery.min.js"></script>
+	<script src="./resource/javascript/three.min.js"></script>
+	<script src="./resource/javascript/details.js"></script>
+	<script>
+		const API_HOST = 'http://192.168.1.100:3000';
+
+		/**
+		 * 使用皮肤图片生成网页图标
+		 * @param {String} base64 皮肤图片base64(不包含data前缀)
+		 */
+		function spawnAvatar(base64) {
+			return new Promise((resolve, reject) => {
+				const image = new Image();
+				image.onload = () => {
+					const tempCanvas = document.createElement('canvas');
+					tempCanvas.width = 8;
+					tempCanvas.height = 8;
+					const tempCtx = tempCanvas.getContext('2d');
+					tempCtx.drawImage(image, 8, 8, 8, 8, 0, 0, 8, 8);
+            		tempCtx.drawImage(image, 40, 8, 8, 8, 0, 0, 8, 8);
+					resolve(tempCanvas.toDataURL('image/png'));
+				};
+				image.src = "data:image/png;base64," + base64;
+			});
+		}
+
+		const ID = new URLSearchParams(location.search.substr(1)).get('id');
+		window.addEventListener('load', () => {
+            fetch(API_HOST + '/getMetaById?id=' + ID)
+                .then(response => response.json())
+                .then(data => {
+					if (data.code === 400) window.history.back();
+					if (data.code === 500) alert('获取数据时发生错误，服务器返回500：' + data.message);
+
+					// 有皮肤原图需要加载的东西
+					if (data.file_skin) {
+						// 设置网页图标
+						spawnAvatar(data.file_skin.base64Data)
+							.then(ret => {
+								document.querySelector('link[rel="shortcut icon"]').href = ret;
+							})
+						// 最后修改时间
+						document.querySelector('main .content .right .editTime span:last-child')
+							.innerText = formatTimestamp(data.file_skin ? data.file_skin.editTime : data.file_view.editTime);
+						document.querySelector('main .content .right .editTime').style.display = 'block';
+
+						// 展示canvas
+						nmci(data.file_skin.base64Data, data.slim);
+						document.querySelector('main .btnGroup .play').style.display = 'flex';
+
+						// 下载皮肤原图
+						document.querySelector('main .btnGroup .downloadSkinImg').addEventListener('click', e => {
+							downloadImgUseBase64("data:image/png;base64," + data.file_skin.base64Data);
+						})
+						document.querySelector('main .btnGroup .downloadSkinImg').style.display = 'flex';
+						// 切换手臂(经典/纤细)
+						document.querySelector('main .btnGroup .switchArmStyle span').innerText = data.slim ? '切换为经典' : '切换为纤细';
+						document.querySelector('main .btnGroup .switchArmStyle').addEventListener('click', e => {
+							fetch(API_HOST + '/switchArmStyle?id=' + data.id, { method: 'PUT' })
+							.then(response => response.json())
+							.then(res => {
+								if (res.code !== 200) alert('切换失败，后端返回错误信息: ' + res.message);
+								else window.location.reload();
+							})
+						})
+						document.querySelector('main .btnGroup .switchArmStyle span').style.display = 'flex';
+					} else { // 没有皮肤原图就是一张图片需要加载的东西
+						document.querySelector('main .content .skin-3d').style.display = 'none';
+						document.querySelector('main .content > img').style.display = 'block';
+						document.querySelector('main .content > img').src = 'data:image/png;base64,' + data.file_view.base64Data;
+					}
+					// 有没有皮肤原图都可以加载的数据(都有的数据)
+					// 皮肤名
+					document.querySelector('main .header p').innerText = data.name;
+					// 上传时间
+                    document.querySelector('main .content .right .uploadTime span:last-child')
+						.innerText = data.uploadTime ? formatTimestamp(data.uploadTime) : '...';
+					// 来源
+					if (data.from.includes('namemc.com') && data.fromMeta && (/^https?:\/\/(www\.)?namemc\.com/i).exec(data.fromMeta)) {
+						document.querySelector('main .content .right .from span:last-child')
+							.innerHTML = data.from.replace('namemc.com', `<a href="${data.fromMeta}" target="_blank" title="点击前往">namemc.com</a>`) || '未知';
+					} else {
+						document.querySelector('main .content .right .from span:last-child')
+						.innerText = data.from || '未知';
+					}
+
+
+					// 下载当前预览图
+					document.querySelector('main .btnGroup .downloadViewImg').addEventListener('click', e => {
+						downloadImgUseBase64(document.querySelector('canvas').toDataURL('image/png'), data.name);
+					})
+					// 重命名
+					document.querySelector('main .btnGroup .rename').addEventListener('click', e => {
+						const newName = prompt(`为 ${data.name} 重命名: `);
+                        if (!newName || newName === data.name) return;
+                        fetch(API_HOST + '/renameById?id=' + data.id, {
+                            method: 'PUT',
+                            headers: {
+                                'Content-Type': 'application/json'
+                            },
+                            body: `{"newName": "${newName}"}`
+                        })
+                            .then(response => response.json())
+                            .then(data => {
+                                if (data.code !== 200) alert('重命名失败，后端返回错误信息: ' + data.message);
+                                else window.location.reload();
+                            })
+					});
+					// 删除
+					document.querySelector('main .btnGroup .delete').addEventListener('click', e => {
+						if (!confirm('确认删除 ' + ID)) return;
+						fetch(API_HOST + '/deleteSkinById?id=' + ID, { method: 'delete' })
+						.then(response => response.json())
+						.then(data => {
+							if (data.code !== 200) alert('删除失败，后端返回错误信息: ' + data.message);
+							else (window.history.back());
+						})
+					})
+                })
+		})
+
+		// 返回按钮
+		document.querySelector('main .header .btnGroup .back').addEventListener('click', e => {
+			window.history.back();
+		})
+	</script>
+</body>
+</html>
