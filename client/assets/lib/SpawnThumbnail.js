@@ -397,7 +397,7 @@ function buildSkinModel(skin, cape, slim, flip) {
 }
 const skin3d = {
     modelCache: {} // TODO 不知道干嘛的
-};
+}
 /**
  * 渲染皮肤
  * @returns 
@@ -468,12 +468,11 @@ async function getImage(base64) {
         img.src = base64;
         img.onload = () => {
             resolve(img);
-        };
+        }
     })
 }
 async function spawn(base64, canvasEl, slim) {
     // 准备好皮肤的Image对象
-    if (!base64.includes('data:image/png;base64,')) base64 = 'data:image/png;base64,' + base64;
     skin3d.skinImgEl = await getImage(base64);
 
     // 和canvas

@@ -1,0 +1,54 @@
+.skinMenu {
+    position: absolute;
+    width: 170px;
+    border-radius: 8px;
+    box-shadow: 0 10px 20px #40404020;
+    background: #fff;
+    user-select: none;
+
+    .title {
+        margin-left: 6px;
+        margin-top: 6px;
+        font-size: .85rem;
+        white-space: nowrap;
+        overflow: hidden;
+        text-overflow: ellipsis;
+        color: #777;
+    }
+    .itemBox {
+        li:not([hidden]) {
+            display: flex;
+            align-items: center;
+            gap: 0 8px;
+            margin: 6px;
+            padding: 6px 8px;
+            border-radius: 6px;
+
+            img {
+                width: 20px;
+                -webkit-user-drag: none;
+            }
+            span {
+                font-size: .95rem;
+            }
+
+            &.style-red:hover {
+                span {
+                    color: #d92027;
+                }
+            }
+
+            &:hover {
+                background-color: #f1f3f7;
+            }
+            &:active {
+                background-color: #e2e5ea;
+            }
+        }
+        hr {
+            margin: 3px 0;
+            border-style: unset;
+            border-top: 1px solid #ddd;
+        }
+    }
+}

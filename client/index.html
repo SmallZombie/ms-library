@@ -1,0 +1,179 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+
+<head>
+    <meta charset="UTF-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>皮肤库</title>
+    <link rel="shortcut icon" href="assets/icon/favicon.svg" type="image/x-icon">
+
+    <link rel="stylesheet" href="assets/style/global.css">
+    <link rel="stylesheet" href="assets/style/index.css">
+    <link rel="stylesheet" href="assets/style/menu.css">
+</head>
+
+<body>
+    <header>
+        <p>皮肤库</p>
+        <div class="right">
+            <input id="addInput" type="file" accept="image/*" multiple hidden>
+            <label for="addInput" class="addBtn">
+                <img src="assets/icon/add.svg" alt="add">
+                <span>添加</span>
+            </label>
+            <button class="moreBtn">
+                <img src="assets/icon/down.svg" alt="more">
+            </button>
+
+            <ul class="popup">
+                <li title="从本地文件添加">
+                    <label class="addFromFileBtn" for="addInput">
+                        <img src="assets/icon/file.svg" alt="file">
+                        <span>文件</span>
+                    </label>
+                </li>
+                <li title="从支持的网站添加">
+                    <button class="addFromSiteBtn">
+                        <img src="assets/icon/link.svg" alt="link">
+                        <span>站点</span>
+                    </button>
+                </li>
+            </ul>
+        </div>
+    </header>
+    <ul class="filters"></ul>
+    <main>
+        <div class="loading"></div>
+        <ul class="main"></ul>
+    </main>
+
+
+    <div class="skinMenu" hidden>
+        <p class="title">标题</p>
+        <ul class="itemBox">
+            <li class="copyName">
+                <img src="assets/icon/skin-menu_copy.svg" alt="copy">
+                <span>复制皮肤名</span>
+            </li>
+            <li class="download">
+                <img src="assets/icon/skin-menu_download.svg" alt="download">
+                <span>下载原图</span>
+            </li>
+            <li class="downloadPreview">
+                <img src="assets/icon/skin-menu_downloadPreview.svg" alt="downloadPreview">
+                <span>下载预览图</span>
+            </li>
+
+            <hr />
+
+            <li class="rename">
+                <img src="assets/icon/skin-menu_rename.svg" alt="rename">
+                <span>重命名</span>
+            </li>
+            <li class="switch">
+                <img src="assets/icon/skin-menu_switch.svg" alt="switch">
+                <span>切换为<span>...</span></span>
+            </li>
+            <li class="delete style-red">
+                <img src="assets/icon/skin-menu_delete.svg" alt="delete">
+                <span>删除</span>
+            </li>
+
+            <hr />
+
+            <li class="cancel">
+                <img>
+                <span>取消</span>
+            </li>
+            <li class="showDefMenu">
+                <img>
+                <span>显示原版菜单</span>
+            </li>
+        </ul>
+    </div>
+    <dialog class="rename style-def style-input">
+        <p class="title">重命名</p>
+        <div class="content">
+            <p class="text">为<span class="skinName"></span>重命名：</p>
+            <form method="dialog" class="content">
+                <input type="text" placeholder="输入新的皮肤名" class="style-def">
+                <div class="btnBox">
+                    <button class="cancel" type="button">取消</button>
+                    <button class="confirm">确定</button>
+                </div>
+            </form>
+        </div>
+    </dialog>
+
+
+    <dialog class="addDialog">
+        <div class="header">
+            <p class="title">添加皮肤</p>
+            <button class="closeBtn" title="取消">
+                <svg width="24" height="24" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+                    <path d="M8 8L16 16" stroke="#4A90E2" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" />
+                    <path d="M8 16L16 8" stroke="#4A90E2" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" />
+                </svg>
+            </button>
+        </div>
+        <div class="preview">
+            <!-- 这里的预览是 3d 预览 -->
+            <img alt="preview">
+            <p class="tips">tips:点击一项以查看预览</p>
+        </div>
+        <div class="content">
+            <ul class="itemBox">
+                <!-- 这里的预览是原图预览 -->
+                <!-- <span class="state waiting">准备中</span> -->
+                <!-- <span class="state ready">就绪</span> -->
+                <!-- <span class="state processing">进行中</span> -->
+                <!-- <span class="state success">成功</span> -->
+                <!-- <span class="state error">失败</span> -->
+            </ul>
+            <div class="addMore">
+                <p>添加更多</p>
+                <ul class="btnBox">
+                    <label class="fromFile" for="addInput">
+                        <img src="assets/icon/file_white.svg" alt="fromFile">
+                        <span>从本地文件添加</span>
+                        <img src="assets/icon/add.svg" alt="add">
+                    </label>
+                    <button class="fromSite">
+                        <img src="assets/icon/link_white.svg" alt="fromSite">
+                        <span>从站点添加</span>
+                        <img src="assets/icon/add.svg" alt="add">
+                    </button>
+                </ul>
+            </div>
+            <div class="bottomBar">
+                <span>共 <span class="count">0</span> 项</span>
+                <div class="btnBox">
+                    <button class="cancel">取消</button>
+                    <button class="start">开始添加</button>
+                </div>
+            </div>
+        </div>
+
+        <dialog class="style-def cancelConfirm">
+            <p class="title">取消</p>
+            <p class="text">将会终止添加并清空所有信息</p>
+            <div class="btnBox">
+                <button class="cancel">取消</button>
+                <button class="confirm">确定</button>
+            </div>
+        </dialog>
+    </dialog>
+    <div class="dragMask">
+        <p>在此处放开以上传</p>
+    </div>
+
+
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/crypto-js/3.1.9-1/crypto-js.js"></script>
+    <script src="assets/lib/three.min.js"></script>
+    <script src="assets/lib/SpawnThumbnail.js"></script>
+
+    <script src="assets/javascript/global.js" type="module"></script>
+    <script src="assets/javascript/index.js" type="module"></script>
+</body>
+</html>

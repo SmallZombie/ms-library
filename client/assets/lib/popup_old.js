@@ -192,6 +192,8 @@ window.addEventListener('resize', debounce(() => {
         el.style.left = (window.innerWidth - el.clientWidth - parseFloat(window.getComputedStyle(el).marginLeft) * 2) / 2 + 'px';
     }
 }, 300));
+
+
 /** 防抖，内部使用 */
 function debounce(func, delay) {
     let timeout = null;
@@ -203,5 +205,5 @@ function debounce(func, delay) {
                 func.apply(this, args);
             }, delay);
         }
-    };
+    }
 }

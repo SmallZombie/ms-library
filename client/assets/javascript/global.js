@@ -1,3 +1,45 @@
+import { fetchEx, Interceptor } from '../lib/fetchEx.js';
+
+
+// 准备网络库
+window.fetch = fetchEx;
+new Interceptor({
+    request: (url, ops = {}) => {
+        url = ops?.noBaseUrl ? url : getBaseUrl() + url;
+
+        if (['POST', 'PUT'].includes(ops?.method)) {
+            ops.body = JSON.stringify(ops.body);
+            ops.headers = { 'Content-Type': 'application/json' };
+        }
+
+        return { path: url, ops }
+    },
+    response: res => {
+        return res.json();
+    }
+});
+
+
+window.addEventListener('load', () => {
+    // 检查服务器地址
+    getBaseUrl();
+});
+
+
+/** 获取服务器地址 */
+function getBaseUrl() {
+    const baseUrl = localStorage.getItem('team.avg.smallzombie.mslibrary.base_url');
+    if (!baseUrl) {
+        let input = null;
+        while (!input) {
+            input = prompt('初次使用，输入服务器地址，不要结尾的 "/"');
+        }
+        localStorage.setItem('team.avg.smallzombie.mslibrary.base_url', input);
+        return input;
+    }
+    return baseUrl;
+}
+
 /**
  * 移除字符串后面的文件扩展名
  * @param {String} filename 文件路径或文件名
@@ -54,6 +96,8 @@ function downloadImgUseBase64(dataUrl, filename) {
  * @returns 处理好的字符串
  */
 function trim(str) {
+    if (!str) return;
+
     return str.replace(/^\s+|\s+$/g, '');
 }
 
@@ -91,5 +135,23 @@ function debounce(func, delay) {
                 func.apply(this, args);
             }, delay);
         }
-    };
+    }
+}
+
+function getQueryString(name) {
+    const url = new URL(window.location.href);
+    return url.searchParams.get(name);
+}
+
+
+export {
+    getBaseUrl,
+    removeFileExtensionUtil,
+    formatTimestamp,
+    downloadImgUseBase64,
+    trim,
+    trimStart,
+    trimAll,
+    debounce,
+    getQueryString
 }
