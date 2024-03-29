@@ -45,7 +45,9 @@ for (const i of oldData.skins) {
             i.slim,
             i.type === '' ? null : i.type,
             '[]',
-            typeof (i.from) === 'object' ? JSON.parse({ url: i.url }) : null,
+            i.fromMeta ? JSON.stringify({
+                url: i.fromMeta
+            }) : null,
             i.uploadTime,
             i.file_skin ? JSON.stringify({
                 name: i.file_skin.name,
