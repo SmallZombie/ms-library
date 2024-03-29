@@ -48,16 +48,16 @@ db.serialize(() => {
         id INTEGER PRIMARY KEY,
         version INTEGER
     )`);
-    db.get('SELECT * FROM system WHERE id = 1', (e, row) => {
-        if (!row) db.run(`INSERT INTO system (version) VALUES (?)`, G_VERSION_DATABASE);
-        else {
-            if (row.version !== G_VERSION_DATABASE) {
+    db.get('SELECT * FROM system WHERE id = 1', async (e, row) => {
+        new Promise((resolve, reject) => {
+            if (!row) db.run(`INSERT INTO system (version) VALUES (?)`, G_VERSION_DATABASE, resolve);
+            else if (row.version !== G_VERSION_DATABASE) {
                 rl.question(`[WARN] 警告，预期数据库版本(${G_VERSION_DATABASE})与实际数据库版本(${row.version})不同，是否继续？(any/n)\n[INFO] tips：你可以尝试运行对应的 upgrade_x-x.js 来升级数据库版本\n`, e => {
                     if (e === 'n') process.exit(0);
-                    run();
+                    resolve();
                 });
-            } else run();
-        }
+            } else resolve();
+        }).then(() =>  run());
     });
 
     db.run(`CREATE TABLE IF NOT EXISTS skin (
