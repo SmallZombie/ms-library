@@ -642,14 +642,21 @@ class AddFromSite extends BaseAdd {
             // 获取信息
             fetch('/getSkinFromUrl?url=' + this.url).then(res => {
                 if (res.code === 200) {
-                    this.name = res.data.name;
-                    this.els.center_meta_nameInput.value = res.data.name;
+                    if (res.data.name) {
+                        this.name = res.data.name;
+                        this.els.center_meta_nameInput.value = res.data.name;
+                    }
                     this.fileData = res.data.file;
 
                     // 显示预览图
                     this.els.previewImg.src = this.fileData;
 
                     this.updateState(State.READY);
+                } else if (res.code === 500) {
+                    this.els.center_errLens.innerText = '服务器错误';
+                    this.els.previewImg.src = '';
+
+                    this.updateState(State.WAITING);
                 } else {
                     this.els.center_errLens.innerText = '不支持的站点';
                     this.els.previewImg.src = '';

@@ -175,7 +175,8 @@ APP.get('/getSkinFromUrl', (req, res) => {
         fetch(G_PUPFLARE_URL + '/?url=https://namemc.com/skin/' + reg_namemc[1])
             .then(data => data.text())
             .then(data => {
-                name = /(?<=<h1[^>]*>\s*<a[^>]*>)[^<]+/.exec(data)[0];
+                const _reg = /(?<=<h1[^>]*>\s*<a[^>]*>)[^<]+/.exec(data);
+                name = _reg ? _reg[0] : null;
                 return fetch(`https://s.namemc.com/i/${reg_namemc[1]}.js`)
             })
             .then(data => data.text())
