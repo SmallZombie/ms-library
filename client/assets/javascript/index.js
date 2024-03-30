@@ -278,7 +278,7 @@ class BaseAdd {
     slim = void 0;
 
     /** 原图 base64 缓存，在第一次调用 `getSkinBase64` 时初始化 */
-    skinBase64 = null;
+    fileData = null;
     /** 预览图 base64 缓存，在第一次调用 `getPreviewBase64` 时初始化 */
     previewBase64 = null;
 
@@ -400,10 +400,10 @@ class BaseAdd {
 
             this.getSkinBase64 = () => {
                 return new Promise((resolve, reject) => {
-                    if (this.skinBase64) resolve(this.skinBase64);
+                    if (this.fileData) resolve(this.fileData);
 
                     this._getSkinBase64().then(res => {
-                        if (res) this.skinBase64 = res;
+                        if (res) this.fileData = res;
                         resolve(res);
                     }).catch(e => reject(e));
                 });
@@ -613,7 +613,7 @@ class AddFromFile extends BaseAdd {
 }
 class AddFromSite extends BaseAdd {
     url = null;
-    skinBase64 = null;
+    fileData = null;
 
     constructor() {
         super({
@@ -644,10 +644,10 @@ class AddFromSite extends BaseAdd {
                 if (res.code === 200) {
                     this.name = res.data.name;
                     this.els.center_meta_nameInput.value = res.data.name;
-                    this.skinBase64 = 'data:image/png;base64,' + res.data.skinBase64;
+                    this.fileData = res.data.file;
 
                     // 显示预览图
-                    this.els.previewImg.src = this.skinBase64;
+                    this.els.previewImg.src = this.fileData;
 
                     this.updateState(State.READY);
                 } else {
@@ -664,7 +664,7 @@ class AddFromSite extends BaseAdd {
 
     getSkinBase64() {
         return new Promise((resolve, reject) => {
-            resolve(this.skinBase64);
+            resolve(this.fileData);
         });
     }
 

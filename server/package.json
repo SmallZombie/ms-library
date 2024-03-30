@@ -1,6 +1,6 @@
 {
     "name": "ms-library",
-    "version": "1.1.0",
+    "version": "1.2.0",
     "description": "一个简单的 Minecraft 皮肤管理器",
     "main": "index.js",
     "scripts": {

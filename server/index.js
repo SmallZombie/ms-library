@@ -16,7 +16,8 @@ const rl = READLINE.createInterface({
 
 const G_DATA_FILE_PATH = './data.db';
 const G_PORT = 3000;
-const G_VERSION = '1.1.0';
+const G_PUPFLARE_URL = 'http://127.0.0.1:3001'; // 不要结尾的 '/'
+const G_VERSION = '1.2.0';
 const G_VERSION_DATABASE = 2;
 const G_DEBUG = false;
 const G_MESSAGES = {
@@ -165,19 +166,41 @@ APP.get('/get', (req, res) => {
 
 // 从支持的站点获取皮肤
 APP.get('/getSkinFromUrl', (req, res) => {
-    const reg = /^(?:https?:\/\/)?(?:[^@\n]+@)?(?:www\.)?([^:\/\n?]+)/.exec(req.query.url)[1];
+    const reg_namemc = /^https:\/\/namemc\.com\/skin\/(\w+)/.exec(req.query.url);
+    const reg_minecraftskins = /^https:\/\/www\.minecraftskins\.com\/skin\/([^/]+)/.exec(req.query.url);
 
-    if (reg === 'namemc.com') {
-        const id = req.query.url.split('/').pop();
-        fetch(`https://s.namemc.com/i/${id}.js`)
+    if (reg_namemc) {
+        let name;
+
+        fetch(G_PUPFLARE_URL + '/?url=https://namemc.com/skin/' + reg_namemc[1])
             .then(data => data.text())
             .then(data => {
-                const dataReg = /\{"[^"]+":\s*"([^"]+)"\}/.exec(data);
+                name = /(?<=<h1[^>]*>\s*<a[^>]*>)[^<]+/.exec(data)[0];
+                return fetch(`https://s.namemc.com/i/${reg_namemc[1]}.js`)
+            })
+            .then(data => data.text())
+            .then(data => {
                 r(res, 200, {
-                    name: id,
-                    skinBase64: dataReg[1]
+                    name,
+                    file: 'data:image/png;base64,' + /\{"[^"]+":\s*"([^"]+)"\}/.exec(data)[1]
                 });
-            });
+            }).catch(e => r(res, 500));
+    } else if (reg_minecraftskins) {
+        let name = null;
+
+        fetch(G_PUPFLARE_URL + '/?url=' + req.query.url)
+            .then(data => data.text())
+            .then(data => {
+                name = /<h3 class="skin-title">([\s\S]*?)<\/h3>/.exec(data)[1].replaceAll('\n', '');
+                return fetch(/\[img\]((?:(?!\[\/?img\]).)*)\[\/img\]/.exec(data)[1])
+            })
+            .then(data => data.arrayBuffer())
+            .then(arrayBuffer => {
+                r(res, 200, {
+                    name,
+                    file: 'data:image/png;base64,' + btoa(String.fromCharCode(...new Uint8Array(arrayBuffer)))
+                })
+            }).catch(e => r(res, 500));
     } else r(res, 400);
 });
 

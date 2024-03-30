@@ -19,9 +19,21 @@
 
 
 # 目前支持的添加方式
-- 本地文件
-- 从支持的站点添加
-    - namemc.com
+- 本地文件 (1.1.0)
+- 从支持的站点添加(需要pupflare，详见下方的#安装)
+    - https://namemc.com/skin/xxxxx (1.1.0)
+    - https://www.minecraftskins.com/skin/xxxxx/xxxxx (1.2.0)
+
+
+# 注意事项
+- 因 1.1.0 移除了数据库备份，进行重大操作前请自己备份 data.db
+
+
+# 安装
+1. 安装 nodejs
+2. 必要：`cd server && npm install`
+3. 可选：如果你需要 从支持的站点添加 你需要安装 [pupflare](https://github.com/unixfox/pupflare)，并将 `server/index.js 19:25` 中的常量替换为服务的地址
+4. 运行：`cd server && node index.js`(请务必在 `server` 目录内运行)
 
 
 # 从旧版本升级
@@ -38,6 +50,6 @@
 
 
 # 使用库
-- nameMC 皮肤 3d 预览
+- namemc 皮肤 3d 预览
 - crypto 计算图片 md5
-- three 被 nameMC 依赖
+- three 被 namemc 依赖

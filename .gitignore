@@ -1,3 +1,4 @@
 server/node_modules
 server/data.db
 server/package-lock.json
+server/pupflare
