@@ -121,6 +121,29 @@ header {
     }
 }
 
+@keyframes loading {
+    0% {
+        background-position: -150% 0, -150% 0
+    }
+    66% {
+        background-position: 250% 0, -150% 0
+    }
+    100% {
+        background-position: 250% 0, 250% 0
+    }
+}
+.loading {
+    height: 3px;
+    --c: no-repeat linear-gradient(#0077ff 0 0);
+    background: var(--c), var(--c), #fff;
+    background-size: 60% 100%;
+    background-position: -200%;
+
+    &.show {
+        animation: loading 2s infinite;
+    }
+}
+
 .filters {
     position: sticky;
     top: 0;
@@ -172,29 +195,6 @@ header {
 }
 
 main {
-    .loading {
-        height: 3px;
-        --c: no-repeat linear-gradient(#0077ff 0 0);
-        background: var(--c), var(--c), #fff;
-        background-size: 60% 100%;
-        background-position: -200%;
-
-        @keyframes loading {
-            0% {
-                background-position: -150% 0, -150% 0
-            }
-            66% {
-                background-position: 250% 0, -150% 0
-            }
-            100% {
-                background-position: 250% 0, 250% 0
-            }
-        }
-
-        &.show {
-            animation: loading 2s infinite;
-        }
-    }
 
     .main {
         display: grid;

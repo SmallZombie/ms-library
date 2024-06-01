@@ -18,7 +18,7 @@ const skinMenu = new SkinMenu(document.querySelector('body > .skinMenu'));
 window.addEventListener('load', () => {
     // 准备元素
     els.filters = document.querySelector('.filters');
-    els.filters_loading = document.querySelector('main .loading');
+    els.filters_loading = document.querySelector('.loading');
 
     els.itemBox = document.querySelector('main .main');
 
@@ -62,6 +62,8 @@ window.addEventListener('load', () => {
     els.tempCanvas.width = 300;
     els.tempCanvas.height = 400;
 
+    // 开始加载，稍后会由筛选器关闭动画
+    els.filters_loading.classList.add('show');
 
     reloadData().then(() => {
         // 初始化筛选器
