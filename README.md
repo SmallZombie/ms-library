@@ -9,47 +9,105 @@
                                               |___/
 ```
 
-# 关于此项目
-从私有仓库 ***/page14 独立出来的一个项目，最开始只是有一些喜欢的皮肤，但直接下载下来看着不直观，所以操作了一下，就有了这个项目，1.0.0 能用，但是不好用，1.1.0 才比较完善
+# Minecraft Skin Library
 
-你是否有很多皮肤需要保留整理？
-又或是遇见喜欢的皮肤想要收集起来？
+A self-hosted web application for collecting, organizing, and previewing Minecraft skins and capes with interactive 3D rendering.
 
-都不是？那你来看这个项目干嘛
+English | [简体中文](README-zh.md)
 
+## Features
 
-# 目前支持的添加方式
-- 本地文件 (1.1.0)
-- 从支持的站点添加(需要pupflare，详见下方的#安装)
-    - https://namemc.com/skin/xxxxx (1.1.0)
-    - https://www.minecraftskins.com/skin/xxxxx/xxxxx (1.2.0)
+- **3D Preview** — Interactive Three.js-powered skin and cape viewer with walk animation
+- **Skin & Cape Management** — Upload, categorize, tag, and track the source of your collection
+- **Smart Import** — Import skins directly from NameMC and MinecraftSkins URLs
+- **Search & Filter** — Search by name, filter by category and tags, sort by date
+- **Cape & Elytra View** — Toggle between cape and elytra display modes
+- **Skin–Cape Linking** — Associate capes with specific skins
+- **Dark Mode** — Automatic system theme detection with manual toggle
+- **Docker Ready** — Single-image deployment with volume-based data persistence
 
+## Quick Start (Docker)
 
-# 注意事项
-- 因 1.1.0 移除了数据库备份，进行重大操作前请自己备份 data.db
+```bash
+docker compose up -d
+```
 
+The app will be available at `http://localhost:3000`.
 
-# 安装
-1. 安装 nodejs
-2. 必要：`cd server && npm install`
-3. 可选：如果你需要 从支持的站点添加 你需要安装 [pupflare](https://github.com/unixfox/pupflare)，并将 `server/index.js 19:25` 中的常量替换为服务的地址
-4. 运行：`cd server && node index.js`(请务必在 `server` 目录内运行)
+All data (database and uploaded files) is stored in the `./data` directory, which is mounted as a Docker volume.
 
+## Quick Start (Development)
 
-# 从旧版本升级
-你需要一步一步的升级，而不是一次从旧版升级到最新版
+```bash
+npm install
+npm run dev
+```
 
-## 1.0.0 -> 1.1.0
-1. 找到升级脚本：`server/upgrade/upgrade_1-2.js`
-2. 将旧数据库(data.json)与升级脚本(upgrade_1-2.js)放到同一目录下
-3. 在同目录下执行 `node upgrade_1-2.js`，等待升级完成，过程中无需担心数据丢失，脚本会自动备份
-4. 将新数据库(data_upgrade_xxx.db)重命名为 `data.db` 放回 `server/` 下，启动服务，检查数据是否正确
-5. 删除无用文件
-    - 升级脚本(如果你想的话，把 `server/upgrade` 目录删了也是可以的)
-    - 旧数据库(必须先确认新数据无误)
+Open `http://localhost:3000` in your browser.
 
+## Tech Stack
 
-# 使用库
-- namemc 皮肤 3d 预览
-- crypto 计算图片 md5
-- three 被 namemc 依赖
+| Layer | Technology |
+|-------|-----------|
+| Framework | Next.js 15 (App Router) |
+| Language | TypeScript |
+| UI | shadcn/ui + Tailwind CSS v4 |
+| 3D Rendering | Three.js (custom skin viewer) |
+| Database | SQLite (via @libsql/client) |
+| ORM | Drizzle ORM |
+| Containerization | Docker (multi-stage build) |
+
+## Project Structure
+
+```
+src/
+├── app/                    # Next.js App Router pages & API routes
+│   ├── skins/              # Skin list, detail, and add pages
+│   ├── capes/              # Cape list, detail, and add pages
+│   └── api/                # REST API endpoints
+├── components/             # React components
+│   ├── ui/                 # shadcn/ui components
+│   ├── skin-viewer.tsx     # 3D skin preview component
+│   ├── skin-card.tsx       # Skin grid card
+│   └── ...
+├── lib/
+│   ├── db/                 # Database schema and connection
+│   ├── skin-viewer/        # Three.js skin rendering engine
+│   └── site-parsers/       # NameMC & MSkins import parsers
+└── hooks/                  # React hooks
+data/                       # Runtime data (gitignored)
+├── db.sqlite               # SQLite database
+├── skins/                  # Uploaded skin PNG files
+└── capes/                  # Uploaded cape PNG files
+```
+
+## Data Storage
+
+- **Database**: SQLite file at `data/db.sqlite` — stores metadata (names, tags, categories, sources, file references)
+- **Files**: Skin and cape images are stored as PNG files in `data/skins/` and `data/capes/` respectively
+- **Deduplication**: Files are deduplicated by MD5 hash on upload
+
+## API Endpoints
+
+### Skins
+
+| Method | Path | Description |
+|--------|------|-------------|
+| `GET` | `/api/skins` | List skins (with search, filter, pagination) |
+| `POST` | `/api/skins` | Add a new skin |
+| `GET` | `/api/skins/:id` | Get skin details |
+| `PUT` | `/api/skins/:id` | Update skin metadata |
+| `DELETE` | `/api/skins/:id` | Delete a skin |
+| `GET` | `/api/skins/filters` | Get available types and tags |
+| `GET` | `/api/skins/parse?url=` | Parse skin from external site |
+
+### Capes
+
+| Method | Path | Description |
+|--------|------|-------------|
+| `GET` | `/api/capes` | List capes |
+| `POST` | `/api/capes` | Add a new cape |
+| `GET` | `/api/capes/:id` | Get cape details |
+| `PUT` | `/api/capes/:id` | Update cape metadata |
+| `DELETE` | `/api/capes/:id` | Delete a cape |
+| `GET` | `/api/capes/filters` | Get available types and tags |
