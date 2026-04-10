@@ -11,103 +11,54 @@
 
 # Minecraft Skin Library
 
-A self-hosted web application for collecting, organizing, and previewing Minecraft skins and capes with interactive 3D rendering.
+A self-hostable web application for collecting, organizing, and previewing Minecraft skins and capes, with third-party login enabled via [Yggdrasil](https://minecraft.wiki/w/Yggdrasil).
 
 English | [简体中文](README-zh.md)
 
 ## Features
 
-- **3D Preview** — Interactive Three.js-powered skin and cape viewer with walk animation
-- **Skin & Cape Management** — Upload, categorize, tag, and track the source of your collection
-- **Smart Import** — Import skins directly from NameMC and MinecraftSkins URLs
-- **Search & Filter** — Search by name, filter by category and tags, sort by date
-- **Cape & Elytra View** — Toggle between cape and elytra display modes
-- **Skin–Cape Linking** — Associate capes with specific skins
-- **Dark Mode** — Automatic system theme detection with manual toggle
-- **Docker Ready** — Single-image deployment with volume-based data persistence
+- **3D Preview** — Interactive skin and cape viewer powered by Three.js, with walking animation support
+- **Skin and Cape Management** — Upload, categorize, tag, and track sources
+- **Search and Filtering** — Filter by name, category, and tags, and sort by time
+- **Docker Deployment** — Single-image deployment with volume-based data persistence
 
-## Quick Start (Docker)
+## Quick Start
 
-```bash
-docker compose up -d
+### Docker Compose
+1. `docker-compose.yml`
 ```
-
-The app will be available at `http://localhost:3000`.
-
-All data (database and uploaded files) is stored in the `./data` directory, which is mounted as a Docker volume.
-
-## Quick Start (Development)
-
-```bash
-npm install
-npm run dev
+services:
+  ms-library:
+    image: ghcr.io/smallzombie/ms-library:latest
+    ports:
+      - "3000:3000"
+    volumes:
+      - <your_data_dir>:/app/data
+    restart: unless-stopped
 ```
+2. `docker compose up -d`
+3. Visit `http://localhost:3000`. The first registered account is automatically granted admin privileges.
 
-Open `http://localhost:3000` in your browser.
+### Development
 
-## Tech Stack
+1. `npm install`
+2. `npm run dev` or `npm run dev:http`
+3. Visit `http://localhost:3000`. The first registered account is automatically granted admin privileges.
 
-| Layer | Technology |
-|-------|-----------|
-| Framework | Next.js 15 (App Router) |
-| Language | TypeScript |
-| UI | shadcn/ui + Tailwind CSS v4 |
-| 3D Rendering | Three.js (custom skin viewer) |
-| Database | SQLite (via @libsql/client) |
-| ORM | Drizzle ORM |
-| Containerization | Docker (multi-stage build) |
+## Next
 
-## Project Structure
+### Third-Party Login
 
-```
-src/
-├── app/                    # Next.js App Router pages & API routes
-│   ├── skins/              # Skin list, detail, and add pages
-│   ├── capes/              # Cape list, detail, and add pages
-│   └── api/                # REST API endpoints
-├── components/             # React components
-│   ├── ui/                 # shadcn/ui components
-│   ├── skin-viewer.tsx     # 3D skin preview component
-│   ├── skin-card.tsx       # Skin grid card
-│   └── ...
-├── lib/
-│   ├── db/                 # Database schema and connection
-│   ├── skin-viewer/        # Three.js skin rendering engine
-│   └── site-parsers/       # NameMC & MSkins import parsers
-└── hooks/                  # React hooks
-data/                       # Runtime data (gitignored)
-├── db.sqlite               # SQLite database
-├── skins/                  # Uploaded skin PNG files
-└── capes/                  # Uploaded cape PNG files
-```
+To enable third-party login (similar to LittleSkin), you only need to:
 
-## Data Storage
+1. Configure the site URL in Site Settings.
+<img src="./doc/image1.png" />
 
-- **Database**: SQLite file at `data/db.sqlite` — stores metadata (names, tags, categories, sources, file references)
-- **Files**: Skin and cape images are stored as PNG files in `data/skins/` and `data/capes/` respectively
-- **Deduplication**: Files are deduplicated by MD5 hash on upload
+2. Create a profile.
 
-## API Endpoints
+3. Drag the link from the profile page, or manually enter the URL in a supported launcher.
+<img src="./doc/image2.png" />
 
-### Skins
+4. Sign in with your account name (or profile name) and password.
 
-| Method | Path | Description |
-|--------|------|-------------|
-| `GET` | `/api/skins` | List skins (with search, filter, pagination) |
-| `POST` | `/api/skins` | Add a new skin |
-| `GET` | `/api/skins/:id` | Get skin details |
-| `PUT` | `/api/skins/:id` | Update skin metadata |
-| `DELETE` | `/api/skins/:id` | Delete a skin |
-| `GET` | `/api/skins/filters` | Get available types and tags |
-| `GET` | `/api/skins/parse?url=` | Parse skin from external site |
-
-### Capes
-
-| Method | Path | Description |
-|--------|------|-------------|
-| `GET` | `/api/capes` | List capes |
-| `POST` | `/api/capes` | Add a new cape |
-| `GET` | `/api/capes/:id` | Get cape details |
-| `PUT` | `/api/capes/:id` | Update cape metadata |
-| `DELETE` | `/api/capes/:id` | Delete a cape |
-| `GET` | `/api/capes/filters` | Get available types and tags |
+5. Enjoy.

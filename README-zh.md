@@ -11,54 +11,53 @@
 
 # Minecraft Skin Library
 
-一个可私有部署的 Web 应用，用于收集、整理和预览 Minecraft 皮肤与披风，带有交互式 3D 渲染。
+一个可私有部署的 Web 应用，用于收集、整理和预览 Minecraft 皮肤与披风，并通过 [Yggdrasil](https://minecraft.wiki/w/Yggdrasil) 实现第三方登录。
 
 [English](README.md) | 简体中文
 
-### 功能特性
+## 功能
 
 - **3D 预览** — 基于 Three.js 的交互式皮肤和披风查看器，支持行走动画
 - **皮肤与披风管理** — 上传、分类、打标签，并记录来源
-- **智能导入** — 支持从 NameMC 和 MinecraftSkins 的 URL 直接导入皮肤
-- **搜索与筛选** — 按名称搜索，按分类和标签筛选，按时间排序
-- **披风与鞘翅切换** — 在披风和鞘翅显示模式之间切换
-- **皮肤-披风关联** — 将披风与特定皮肤关联
-- **深色模式** — 自动检测系统主题，支持手动切换
+- **搜索与筛选** — 按名称、分类和标签筛选，并按时间排序
 - **Docker 部署** — 单镜像部署，基于 volume 的数据持久化
 
-### 快速开始 (Docker)
+## 快速开始
 
-```bash
-docker compose up -d
+### Docker Compose
+1. `docker-compose.yml`
 ```
-
-应用将在 `http://localhost:3000` 上可用。
-
-所有数据（数据库和上传的文件）存储在 `./data` 目录中，作为 Docker volume 挂载。
-
-### 快速开始 (开发)
-
-```bash
-npm install
-npm run dev
+services:
+  ms-library:
+    image: ghcr.io/smallzombie/ms-library:latest
+    ports:
+      - "3000:3000"
+    volumes:
+      - <your_data_dir>:/app/data
+    restart: unless-stopped
 ```
+2. `docker compose up -d`
+3. 访问 `http://localhost:3000`，第一个注册的账户会自动成为管理员。
 
-在浏览器中打开 `http://localhost:3000`。
+### 开发
 
-### 技术栈
+1. `npm install`
+2. `npm run dev` or `npm run dev:http`
+3. 访问 `http://localhost:3000`，第一个注册的账户会自动成为管理员。
 
-| 层级 | 技术 |
-|------|------|
-| 框架 | Next.js 15 (App Router) |
-| 语言 | TypeScript |
-| UI | shadcn/ui + Tailwind CSS v4 |
-| 3D 渲染 | Three.js（自研皮肤查看器） |
-| 数据库 | SQLite（via @libsql/client） |
-| ORM | Drizzle ORM |
-| 容器化 | Docker（多阶段构建） |
+## 接下来
 
-### 数据存储
+### 第三方登录
 
-- **数据库**：SQLite 文件位于 `data/db.sqlite` — 存储元数据（名称、标签、分类、来源、文件引用）
-- **文件**：皮肤和披风图片分别存储为 PNG 文件在 `data/skins/` 和 `data/capes/` 目录下
-- **去重**：上传时通过 MD5 哈希进行文件去重
+想要实现第三方登录（类似 LittleSkin），你只需要：
+1. 在站点配置中填写站点 URL
+<img src="./doc/image1.png" />
+
+2. 创建一个游戏角色
+
+3. 拖动角色页面中的链接，或手动将 URL 填入支持的启动器
+<img src="./doc/image2.png" />
+
+4. 使用你的账户名（或角色名）和密码登录
+
+5. Enjoy.

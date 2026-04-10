@@ -38,7 +38,6 @@ interface PendingFile {
   name: string;
   file: string;
   fileMD5: string;
-  /** null = 未手动设置，上传时可选自动检测 */
   slim: boolean | null;
   skinName: string;
   type: string;
