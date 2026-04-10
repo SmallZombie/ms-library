@@ -6,9 +6,16 @@ import {
   TextureLoader,
   WebGLRenderer,
   Texture,
+  CanvasTexture,
 } from 'three';
 import { OrbitControls } from 'three/examples/jsm/controls/OrbitControls.js';
 import { radians, texturePainting } from './utils';
+
+const GLOBAL_ANIM_ORIGIN = typeof performance !== 'undefined' ? performance.now() : Date.now();
+
+function globalNow(): number {
+  return (typeof performance !== 'undefined' ? performance.now() : Date.now()) - GLOBAL_ANIM_ORIGIN;
+}
 
 export interface SkinViewerOptions {
   skinDataURL?: string;
@@ -32,8 +39,8 @@ export class SkinViewerCore {
   options: SkinViewerOptions = {};
 
   private playAnim: boolean | number = false;
-  private animStartTime: number | null = null;
-  private animPauseTime: number | null = null;
+  private animTimeOffset: number = 0;
+  private animPausedElapsed: number | null = null;
   private stopTimer: ReturnType<typeof setTimeout> | null = null;
 
   constructor(canvas: HTMLCanvasElement, options: SkinViewerOptions = {}) {
@@ -78,6 +85,11 @@ export class SkinViewerCore {
     canvas.addEventListener('mousedown', () => this.startRenderLoop());
   }
 
+  private getAnimElapsed(): number {
+    if (this.animPausedElapsed !== null) return this.animPausedElapsed;
+    return globalNow() + this.animTimeOffset;
+  }
+
   render(): void {
     function calcSkinRotationAngle(
       timeElapsed: number,
@@ -106,7 +118,7 @@ export class SkinViewerCore {
       this.playAnim === true ||
       (typeof this.playAnim === 'number' && this.playAnim > 0)
     ) {
-      const elapsed = Date.now() - (this.animStartTime ?? Date.now());
+      const elapsed = this.getAnimElapsed();
       const angle = radians(calcSkinRotationAngle(elapsed, 1800, 30));
 
       if (this.skinModel) {
@@ -150,43 +162,40 @@ export class SkinViewerCore {
     }, 10000);
   }
 
-  private loadTexture(dataURL: string): Promise<Texture> {
+  private loadTexture(url: string): Promise<Texture> {
     return new Promise((resolve) => {
-      new TextureLoader().load(dataURL, resolve);
+      new TextureLoader().load(url, resolve);
     });
   }
 
-  private buildSkinModel(skinDataURL: string): Promise<Group> {
-    return new Promise((resolve) => {
-      new TextureLoader().load(skinDataURL, (texture) => {
-        if (texture.source.data.height === 32) {
-          resolve(this.buildSkinModel32(texture));
-        } else {
-          resolve(this.buildSkinModel64(texture));
-        }
-      });
-    });
+  private async buildSkinModel(skinURL: string): Promise<Group> {
+    const texture = await this.loadTexture(skinURL);
+    if (texture.source.data.height === 32) {
+      return this._buildSkinModel32(texture);
+    } else {
+      return this._buildSkinModel64(texture);
+    }
   }
 
-  private buildSkinModel64(texture: Texture): Group {
+  private _buildSkinModel64(texture: Texture): Group {
     const OutsideExtraSize = 0.8;
     const _px = (num: number) => num / 64;
 
     const model = new Group();
 
-    // Head
+
     const headGroup = new Group();
     headGroup.position.y = 12;
 
     const headGeo = texturePainting(
       new BoxGeometry(8, 8, 8),
       new Float32Array([
-        _px(16),_px(56), _px(24),_px(56), _px(16),_px(48), _px(24),_px(48),
-        _px(0),_px(56), _px(8),_px(56), _px(0),_px(48), _px(8),_px(48),
-        _px(8),_px(64), _px(16),_px(64), _px(8),_px(56), _px(16),_px(56),
-        _px(16),_px(56), _px(24),_px(56), _px(16),_px(64), _px(24),_px(64),
-        _px(8),_px(56), _px(16),_px(56), _px(8),_px(48), _px(16),_px(48),
-        _px(24),_px(56), _px(32),_px(56), _px(24),_px(48), _px(32),_px(48),
+        _px(16), _px(56), _px(24), _px(56), _px(16), _px(48), _px(24), _px(48),
+        _px(0), _px(56), _px(8), _px(56), _px(0), _px(48), _px(8), _px(48),
+        _px(8), _px(64), _px(16), _px(64), _px(8), _px(56), _px(16), _px(56),
+        _px(16), _px(56), _px(24), _px(56), _px(16), _px(64), _px(24), _px(64),
+        _px(8), _px(56), _px(16), _px(56), _px(8), _px(48), _px(16), _px(48),
+        _px(24), _px(56), _px(32), _px(56), _px(24), _px(48), _px(32), _px(48),
       ]),
       texture
     );
@@ -195,31 +204,31 @@ export class SkinViewerCore {
     const head2Geo = texturePainting(
       new BoxGeometry(8 + OutsideExtraSize, 8 + OutsideExtraSize, 8 + OutsideExtraSize),
       new Float32Array([
-        _px(48),_px(56), _px(56),_px(56), _px(48),_px(48), _px(56),_px(48),
-        _px(32),_px(56), _px(40),_px(56), _px(32),_px(48), _px(40),_px(48),
-        _px(40),_px(64), _px(48),_px(64), _px(40),_px(56), _px(48),_px(56),
-        _px(48),_px(56), _px(56),_px(56), _px(48),_px(64), _px(56),_px(64),
-        _px(40),_px(56), _px(48),_px(56), _px(40),_px(48), _px(48),_px(48),
-        _px(56),_px(56), _px(64),_px(56), _px(56),_px(48), _px(64),_px(48),
+        _px(48), _px(56), _px(56), _px(56), _px(48), _px(48), _px(56), _px(48),
+        _px(32), _px(56), _px(40), _px(56), _px(32), _px(48), _px(40), _px(48),
+        _px(40), _px(64), _px(48), _px(64), _px(40), _px(56), _px(48), _px(56),
+        _px(48), _px(56), _px(56), _px(56), _px(48), _px(64), _px(56), _px(64),
+        _px(40), _px(56), _px(48), _px(56), _px(40), _px(48), _px(48), _px(48),
+        _px(56), _px(56), _px(64), _px(56), _px(56), _px(48), _px(64), _px(48),
       ]),
       texture,
       { alpha: true, doubleSide: true }
     );
     headGroup.add(head2Geo);
 
-    // Body
+
     const bodyGroup = new Group();
     bodyGroup.position.y = 2;
 
     const bodyGeo = texturePainting(
       new BoxGeometry(8, 12, 4),
       new Float32Array([
-        _px(28),_px(44), _px(32),_px(44), _px(28),_px(32), _px(32),_px(32),
-        _px(16),_px(44), _px(20),_px(44), _px(16),_px(32), _px(20),_px(32),
-        _px(20),_px(48), _px(28),_px(48), _px(20),_px(44), _px(28),_px(44),
-        _px(28),_px(44), _px(36),_px(44), _px(28),_px(48), _px(36),_px(48),
-        _px(20),_px(44), _px(28),_px(44), _px(20),_px(32), _px(28),_px(32),
-        _px(32),_px(44), _px(40),_px(44), _px(32),_px(32), _px(40),_px(32),
+        _px(28), _px(44), _px(32), _px(44), _px(28), _px(32), _px(32), _px(32),
+        _px(16), _px(44), _px(20), _px(44), _px(16), _px(32), _px(20), _px(32),
+        _px(20), _px(48), _px(28), _px(48), _px(20), _px(44), _px(28), _px(44),
+        _px(28), _px(44), _px(36), _px(44), _px(28), _px(48), _px(36), _px(48),
+        _px(20), _px(44), _px(28), _px(44), _px(20), _px(32), _px(28), _px(32),
+        _px(32), _px(44), _px(40), _px(44), _px(32), _px(32), _px(40), _px(32),
       ]),
       texture
     );
@@ -228,19 +237,19 @@ export class SkinViewerCore {
     const body2Geo = texturePainting(
       new BoxGeometry(8 + OutsideExtraSize, 12 + OutsideExtraSize, 4 + OutsideExtraSize),
       new Float32Array([
-        _px(28),_px(28), _px(32),_px(28), _px(28),_px(16), _px(32),_px(16),
-        _px(16),_px(28), _px(20),_px(28), _px(16),_px(16), _px(20),_px(16),
-        _px(20),_px(32), _px(28),_px(32), _px(20),_px(28), _px(28),_px(28),
-        _px(28),_px(28), _px(36),_px(28), _px(28),_px(32), _px(36),_px(32),
-        _px(20),_px(28), _px(28),_px(28), _px(20),_px(16), _px(28),_px(16),
-        _px(32),_px(28), _px(40),_px(28), _px(32),_px(16), _px(40),_px(16),
+        _px(28), _px(28), _px(32), _px(28), _px(28), _px(16), _px(32), _px(16),
+        _px(16), _px(28), _px(20), _px(28), _px(16), _px(16), _px(20), _px(16),
+        _px(20), _px(32), _px(28), _px(32), _px(20), _px(28), _px(28), _px(28),
+        _px(28), _px(28), _px(36), _px(28), _px(28), _px(32), _px(36), _px(32),
+        _px(20), _px(28), _px(28), _px(28), _px(20), _px(16), _px(28), _px(16),
+        _px(32), _px(28), _px(40), _px(28), _px(32), _px(16), _px(40), _px(16),
       ]),
       texture,
       { alpha: true, doubleSide: true }
     );
     bodyGroup.add(body2Geo);
 
-    // Left Arm
+
     const slim = this.options.slim;
     const armWidth = slim ? 3 : 4;
 
@@ -251,20 +260,20 @@ export class SkinViewerCore {
 
     const leftArmUV = slim
       ? new Float32Array([
-          _px(39),_px(12), _px(43),_px(12), _px(39),_px(0), _px(43),_px(0),
-          _px(32),_px(12), _px(36),_px(12), _px(32),_px(0), _px(36),_px(0),
-          _px(36),_px(16), _px(39),_px(16), _px(36),_px(12), _px(39),_px(12),
-          _px(39),_px(12), _px(42),_px(12), _px(39),_px(16), _px(42),_px(16),
-          _px(36),_px(12), _px(39),_px(12), _px(36),_px(0), _px(39),_px(0),
-          _px(43),_px(12), _px(46),_px(12), _px(43),_px(0), _px(46),_px(0),
+          _px(39), _px(12), _px(43), _px(12), _px(39), _px(0), _px(43), _px(0),
+          _px(32), _px(12), _px(36), _px(12), _px(32), _px(0), _px(36), _px(0),
+          _px(36), _px(16), _px(39), _px(16), _px(36), _px(12), _px(39), _px(12),
+          _px(39), _px(12), _px(42), _px(12), _px(39), _px(16), _px(42), _px(16),
+          _px(36), _px(12), _px(39), _px(12), _px(36), _px(0), _px(39), _px(0),
+          _px(43), _px(12), _px(46), _px(12), _px(43), _px(0), _px(46), _px(0),
         ])
       : new Float32Array([
-          _px(40),_px(12), _px(44),_px(12), _px(40),_px(0), _px(44),_px(0),
-          _px(32),_px(12), _px(36),_px(12), _px(32),_px(0), _px(36),_px(0),
-          _px(36),_px(16), _px(40),_px(16), _px(36),_px(12), _px(40),_px(12),
-          _px(40),_px(12), _px(44),_px(12), _px(40),_px(16), _px(44),_px(16),
-          _px(36),_px(12), _px(40),_px(12), _px(36),_px(0), _px(40),_px(0),
-          _px(44),_px(12), _px(48),_px(12), _px(44),_px(0), _px(48),_px(0),
+          _px(40), _px(12), _px(44), _px(12), _px(40), _px(0), _px(44), _px(0),
+          _px(32), _px(12), _px(36), _px(12), _px(32), _px(0), _px(36), _px(0),
+          _px(36), _px(16), _px(40), _px(16), _px(36), _px(12), _px(40), _px(12),
+          _px(40), _px(12), _px(44), _px(12), _px(40), _px(16), _px(44), _px(16),
+          _px(36), _px(12), _px(40), _px(12), _px(36), _px(0), _px(40), _px(0),
+          _px(44), _px(12), _px(48), _px(12), _px(44), _px(0), _px(48), _px(0),
         ]);
 
     const leftArmGeo = texturePainting(
@@ -277,20 +286,20 @@ export class SkinViewerCore {
 
     const leftArm2UV = slim
       ? new Float32Array([
-          _px(55),_px(12), _px(59),_px(12), _px(55),_px(0), _px(59),_px(0),
-          _px(48),_px(12), _px(52),_px(12), _px(48),_px(0), _px(52),_px(0),
-          _px(52),_px(16), _px(55),_px(16), _px(52),_px(12), _px(55),_px(12),
-          _px(55),_px(12), _px(58),_px(12), _px(55),_px(16), _px(58),_px(16),
-          _px(52),_px(12), _px(55),_px(12), _px(52),_px(0), _px(55),_px(0),
-          _px(59),_px(12), _px(62),_px(12), _px(59),_px(0), _px(62),_px(0),
+          _px(55), _px(12), _px(59), _px(12), _px(55), _px(0), _px(59), _px(0),
+          _px(48), _px(12), _px(52), _px(12), _px(48), _px(0), _px(52), _px(0),
+          _px(52), _px(16), _px(55), _px(16), _px(52), _px(12), _px(55), _px(12),
+          _px(55), _px(12), _px(58), _px(12), _px(55), _px(16), _px(58), _px(16),
+          _px(52), _px(12), _px(55), _px(12), _px(52), _px(0), _px(55), _px(0),
+          _px(59), _px(12), _px(62), _px(12), _px(59), _px(0), _px(62), _px(0),
         ])
       : new Float32Array([
-          _px(56),_px(12), _px(60),_px(12), _px(56),_px(0), _px(60),_px(0),
-          _px(48),_px(12), _px(52),_px(12), _px(48),_px(0), _px(52),_px(0),
-          _px(52),_px(16), _px(56),_px(16), _px(52),_px(12), _px(56),_px(12),
-          _px(56),_px(12), _px(60),_px(12), _px(56),_px(16), _px(60),_px(16),
-          _px(52),_px(12), _px(56),_px(12), _px(52),_px(0), _px(56),_px(0),
-          _px(60),_px(12), _px(64),_px(12), _px(60),_px(0), _px(64),_px(0),
+          _px(56), _px(12), _px(60), _px(12), _px(56), _px(0), _px(60), _px(0),
+          _px(48), _px(12), _px(52), _px(12), _px(48), _px(0), _px(52), _px(0),
+          _px(52), _px(16), _px(56), _px(16), _px(52), _px(12), _px(56), _px(12),
+          _px(56), _px(12), _px(60), _px(12), _px(56), _px(16), _px(60), _px(16),
+          _px(52), _px(12), _px(56), _px(12), _px(52), _px(0), _px(56), _px(0),
+          _px(60), _px(12), _px(64), _px(12), _px(60), _px(0), _px(64), _px(0),
         ]);
 
     const leftArm2Geo = texturePainting(
@@ -302,7 +311,7 @@ export class SkinViewerCore {
     leftArm2Geo.position.y -= 4;
     leftArmGroup.add(leftArm2Geo);
 
-    // Right Arm
+
     const rightArmGroup = new Group();
     rightArmGroup.position.set(slim ? -5 : -6, 2 + 4, 0);
     rightArmGroup.rotateZ(radians(-1));
@@ -310,20 +319,20 @@ export class SkinViewerCore {
 
     const rightArmUV = slim
       ? new Float32Array([
-          _px(47),_px(44), _px(51),_px(44), _px(47),_px(32), _px(51),_px(32),
-          _px(40),_px(44), _px(44),_px(44), _px(40),_px(32), _px(44),_px(32),
-          _px(44),_px(48), _px(47),_px(48), _px(44),_px(44), _px(47),_px(44),
-          _px(47),_px(44), _px(50),_px(44), _px(47),_px(48), _px(50),_px(48),
-          _px(44),_px(44), _px(47),_px(44), _px(44),_px(32), _px(47),_px(32),
-          _px(51),_px(44), _px(54),_px(44), _px(51),_px(32), _px(54),_px(32),
+          _px(47), _px(44), _px(51), _px(44), _px(47), _px(32), _px(51), _px(32),
+          _px(40), _px(44), _px(44), _px(44), _px(40), _px(32), _px(44), _px(32),
+          _px(44), _px(48), _px(47), _px(48), _px(44), _px(44), _px(47), _px(44),
+          _px(47), _px(44), _px(50), _px(44), _px(47), _px(48), _px(50), _px(48),
+          _px(44), _px(44), _px(47), _px(44), _px(44), _px(32), _px(47), _px(32),
+          _px(51), _px(44), _px(54), _px(44), _px(51), _px(32), _px(54), _px(32),
         ])
       : new Float32Array([
-          _px(48),_px(44), _px(52),_px(44), _px(48),_px(32), _px(52),_px(32),
-          _px(40),_px(44), _px(44),_px(44), _px(40),_px(32), _px(44),_px(32),
-          _px(44),_px(48), _px(48),_px(48), _px(44),_px(44), _px(48),_px(44),
-          _px(48),_px(44), _px(52),_px(44), _px(48),_px(48), _px(52),_px(48),
-          _px(44),_px(44), _px(48),_px(44), _px(44),_px(32), _px(48),_px(32),
-          _px(52),_px(44), _px(56),_px(44), _px(52),_px(32), _px(56),_px(32),
+          _px(48), _px(44), _px(52), _px(44), _px(48), _px(32), _px(52), _px(32),
+          _px(40), _px(44), _px(44), _px(44), _px(40), _px(32), _px(44), _px(32),
+          _px(44), _px(48), _px(48), _px(48), _px(44), _px(44), _px(48), _px(44),
+          _px(48), _px(44), _px(52), _px(44), _px(48), _px(48), _px(52), _px(48),
+          _px(44), _px(44), _px(48), _px(44), _px(44), _px(32), _px(48), _px(32),
+          _px(52), _px(44), _px(56), _px(44), _px(52), _px(32), _px(56), _px(32),
         ]);
 
     const rightArmGeo = texturePainting(
@@ -336,20 +345,20 @@ export class SkinViewerCore {
 
     const rightArm2UV = slim
       ? new Float32Array([
-          _px(47),_px(28), _px(51),_px(28), _px(47),_px(16), _px(51),_px(16),
-          _px(40),_px(28), _px(44),_px(28), _px(40),_px(16), _px(44),_px(16),
-          _px(44),_px(32), _px(47),_px(32), _px(44),_px(28), _px(47),_px(28),
-          _px(47),_px(28), _px(50),_px(28), _px(47),_px(32), _px(50),_px(32),
-          _px(44),_px(28), _px(47),_px(28), _px(44),_px(16), _px(47),_px(16),
-          _px(51),_px(28), _px(54),_px(28), _px(51),_px(16), _px(54),_px(16),
+          _px(47), _px(28), _px(51), _px(28), _px(47), _px(16), _px(51), _px(16),
+          _px(40), _px(28), _px(44), _px(28), _px(40), _px(16), _px(44), _px(16),
+          _px(44), _px(32), _px(47), _px(32), _px(44), _px(28), _px(47), _px(28),
+          _px(47), _px(28), _px(50), _px(28), _px(47), _px(32), _px(50), _px(32),
+          _px(44), _px(28), _px(47), _px(28), _px(44), _px(16), _px(47), _px(16),
+          _px(51), _px(28), _px(54), _px(28), _px(51), _px(16), _px(54), _px(16),
         ])
       : new Float32Array([
-          _px(48),_px(28), _px(52),_px(28), _px(48),_px(16), _px(52),_px(16),
-          _px(40),_px(28), _px(44),_px(28), _px(40),_px(16), _px(44),_px(16),
-          _px(44),_px(32), _px(48),_px(32), _px(44),_px(28), _px(48),_px(28),
-          _px(48),_px(28), _px(52),_px(28), _px(48),_px(32), _px(52),_px(32),
-          _px(44),_px(28), _px(48),_px(28), _px(44),_px(16), _px(48),_px(16),
-          _px(52),_px(28), _px(56),_px(28), _px(52),_px(16), _px(56),_px(16),
+          _px(48), _px(28), _px(52), _px(28), _px(48), _px(16), _px(52), _px(16),
+          _px(40), _px(28), _px(44), _px(28), _px(40), _px(16), _px(44), _px(16),
+          _px(44), _px(32), _px(48), _px(32), _px(44), _px(28), _px(48), _px(28),
+          _px(48), _px(28), _px(52), _px(28), _px(48), _px(32), _px(52), _px(32),
+          _px(44), _px(28), _px(48), _px(28), _px(44), _px(16), _px(48), _px(16),
+          _px(52), _px(28), _px(56), _px(28), _px(52), _px(16), _px(56), _px(16),
         ]);
 
     const rightArm2Geo = texturePainting(
@@ -361,7 +370,7 @@ export class SkinViewerCore {
     rightArm2Geo.position.y -= 4;
     rightArmGroup.add(rightArm2Geo);
 
-    // Left Leg
+
     const leftLegGroup = new Group();
     leftLegGroup.position.set(1.96, -10 + 4, 0);
     leftLegGroup.scale.set(0.98, 0.98, 0.98);
@@ -369,12 +378,12 @@ export class SkinViewerCore {
     const leftLegGeo = texturePainting(
       new BoxGeometry(4, 12, 4),
       new Float32Array([
-        _px(24),_px(12), _px(28),_px(12), _px(24),_px(0), _px(28),_px(0),
-        _px(16),_px(12), _px(20),_px(12), _px(16),_px(0), _px(20),_px(0),
-        _px(20),_px(16), _px(24),_px(16), _px(20),_px(12), _px(24),_px(12),
-        _px(24),_px(12), _px(28),_px(12), _px(24),_px(16), _px(28),_px(16),
-        _px(20),_px(12), _px(24),_px(12), _px(20),_px(0), _px(24),_px(0),
-        _px(28),_px(12), _px(32),_px(12), _px(28),_px(0), _px(32),_px(0),
+        _px(24), _px(12), _px(28), _px(12), _px(24), _px(0), _px(28), _px(0),
+        _px(16), _px(12), _px(20), _px(12), _px(16), _px(0), _px(20), _px(0),
+        _px(20), _px(16), _px(24), _px(16), _px(20), _px(12), _px(24), _px(12),
+        _px(24), _px(12), _px(28), _px(12), _px(24), _px(16), _px(28), _px(16),
+        _px(20), _px(12), _px(24), _px(12), _px(20), _px(0), _px(24), _px(0),
+        _px(28), _px(12), _px(32), _px(12), _px(28), _px(0), _px(32), _px(0),
       ]),
       texture
     );
@@ -384,12 +393,12 @@ export class SkinViewerCore {
     const leftLeg2Geo = texturePainting(
       new BoxGeometry(4 + OutsideExtraSize, 12 + OutsideExtraSize, 4 + OutsideExtraSize),
       new Float32Array([
-        _px(8),_px(12), _px(12),_px(12), _px(8),_px(0), _px(12),_px(0),
-        _px(0),_px(12), _px(4),_px(12), _px(0),_px(0), _px(4),_px(0),
-        _px(4),_px(16), _px(8),_px(16), _px(4),_px(12), _px(8),_px(12),
-        _px(8),_px(12), _px(12),_px(12), _px(8),_px(16), _px(12),_px(16),
-        _px(4),_px(12), _px(8),_px(12), _px(4),_px(0), _px(8),_px(0),
-        _px(12),_px(12), _px(16),_px(12), _px(12),_px(0), _px(16),_px(0),
+        _px(8), _px(12), _px(12), _px(12), _px(8), _px(0), _px(12), _px(0),
+        _px(0), _px(12), _px(4), _px(12), _px(0), _px(0), _px(4), _px(0),
+        _px(4), _px(16), _px(8), _px(16), _px(4), _px(12), _px(8), _px(12),
+        _px(8), _px(12), _px(12), _px(12), _px(8), _px(16), _px(12), _px(16),
+        _px(4), _px(12), _px(8), _px(12), _px(4), _px(0), _px(8), _px(0),
+        _px(12), _px(12), _px(16), _px(12), _px(12), _px(0), _px(16), _px(0),
       ]),
       texture,
       { alpha: true, doubleSide: true }
@@ -397,7 +406,7 @@ export class SkinViewerCore {
     leftLeg2Geo.position.y -= 4;
     leftLegGroup.add(leftLeg2Geo);
 
-    // Right Leg
+
     const rightLegGroup = new Group();
     rightLegGroup.position.set(-1.96, -10 + 4, 0);
     rightLegGroup.scale.set(0.98, 0.98, 0.98);
@@ -405,12 +414,12 @@ export class SkinViewerCore {
     const rightLegGeo = texturePainting(
       new BoxGeometry(4, 12, 4),
       new Float32Array([
-        _px(8),_px(44), _px(12),_px(44), _px(8),_px(32), _px(12),_px(32),
-        _px(0),_px(44), _px(4),_px(44), _px(0),_px(32), _px(4),_px(32),
-        _px(4),_px(48), _px(8),_px(48), _px(4),_px(44), _px(8),_px(44),
-        _px(8),_px(44), _px(12),_px(44), _px(8),_px(48), _px(12),_px(48),
-        _px(4),_px(44), _px(8),_px(44), _px(4),_px(32), _px(8),_px(32),
-        _px(12),_px(44), _px(16),_px(44), _px(12),_px(32), _px(16),_px(32),
+        _px(8), _px(44), _px(12), _px(44), _px(8), _px(32), _px(12), _px(32),
+        _px(0), _px(44), _px(4), _px(44), _px(0), _px(32), _px(4), _px(32),
+        _px(4), _px(48), _px(8), _px(48), _px(4), _px(44), _px(8), _px(44),
+        _px(8), _px(44), _px(12), _px(44), _px(8), _px(48), _px(12), _px(48),
+        _px(4), _px(44), _px(8), _px(44), _px(4), _px(32), _px(8), _px(32),
+        _px(12), _px(44), _px(16), _px(44), _px(12), _px(32), _px(16), _px(32),
       ]),
       texture
     );
@@ -420,12 +429,12 @@ export class SkinViewerCore {
     const rightLeg2Geo = texturePainting(
       new BoxGeometry(4 + OutsideExtraSize, 12 + OutsideExtraSize, 4 + OutsideExtraSize),
       new Float32Array([
-        _px(8),_px(28), _px(12),_px(28), _px(8),_px(16), _px(12),_px(16),
-        _px(0),_px(28), _px(4),_px(28), _px(0),_px(16), _px(4),_px(16),
-        _px(4),_px(32), _px(8),_px(32), _px(4),_px(28), _px(8),_px(28),
-        _px(8),_px(28), _px(12),_px(28), _px(8),_px(32), _px(12),_px(32),
-        _px(4),_px(28), _px(8),_px(28), _px(4),_px(16), _px(8),_px(16),
-        _px(12),_px(28), _px(16),_px(28), _px(12),_px(16), _px(16),_px(16),
+        _px(8), _px(28), _px(12), _px(28), _px(8), _px(16), _px(12), _px(16),
+        _px(0), _px(28), _px(4), _px(28), _px(0), _px(16), _px(4), _px(16),
+        _px(4), _px(32), _px(8), _px(32), _px(4), _px(28), _px(8), _px(28),
+        _px(8), _px(28), _px(12), _px(28), _px(8), _px(32), _px(12), _px(32),
+        _px(4), _px(28), _px(8), _px(28), _px(4), _px(16), _px(8), _px(16),
+        _px(12), _px(28), _px(16), _px(28), _px(12), _px(16), _px(16), _px(16),
       ]),
       texture,
       { alpha: true, doubleSide: true }
@@ -443,25 +452,25 @@ export class SkinViewerCore {
     return model;
   }
 
-  private buildSkinModel32(texture: Texture): Group {
+  private _buildSkinModel32(texture: Texture): Group {
     const _pxX = (num: number) => num / 64;
     const _pxY = (num: number) => num / 32;
 
     const model = new Group();
 
-    // Head
+
     const headGroup = new Group();
     headGroup.position.y = 12;
 
     const headGeo = texturePainting(
       new BoxGeometry(8, 8, 8),
       new Float32Array([
-        _pxX(16),_pxY(24), _pxX(24),_pxY(24), _pxX(16),_pxY(16), _pxX(24),_pxY(16),
-        _pxX(0),_pxY(24), _pxX(8),_pxY(24), _pxX(0),_pxY(16), _pxX(8),_pxY(16),
-        _pxX(8),_pxY(32), _pxX(16),_pxY(32), _pxX(8),_pxY(24), _pxX(16),_pxY(24),
-        _pxX(16),_pxY(24), _pxX(24),_pxY(24), _pxX(16),_pxY(32), _pxX(24),_pxY(32),
-        _pxX(8),_pxY(24), _pxX(16),_pxY(24), _pxX(8),_pxY(16), _pxX(16),_pxY(16),
-        _pxX(24),_pxY(24), _pxX(32),_pxY(24), _pxX(24),_pxY(16), _pxX(32),_pxY(16),
+        _pxX(16), _pxY(24), _pxX(24), _pxY(24), _pxX(16), _pxY(16), _pxX(24), _pxY(16),
+        _pxX(0), _pxY(24), _pxX(8), _pxY(24), _pxX(0), _pxY(16), _pxX(8), _pxY(16),
+        _pxX(8), _pxY(32), _pxX(16), _pxY(32), _pxX(8), _pxY(24), _pxX(16), _pxY(24),
+        _pxX(16), _pxY(24), _pxX(24), _pxY(24), _pxX(16), _pxY(32), _pxX(24), _pxY(32),
+        _pxX(8), _pxY(24), _pxX(16), _pxY(24), _pxX(8), _pxY(16), _pxX(16), _pxY(16),
+        _pxX(24), _pxY(24), _pxX(32), _pxY(24), _pxX(24), _pxY(16), _pxX(32), _pxY(16),
       ]),
       texture
     );
@@ -471,106 +480,106 @@ export class SkinViewerCore {
     const head2Geo = texturePainting(
       new BoxGeometry(8 + OutsideExtraSize, 8 + OutsideExtraSize, 8 + OutsideExtraSize),
       new Float32Array([
-        _pxX(48),_pxY(24), _pxX(56),_pxY(24), _pxX(48),_pxY(16), _pxX(56),_pxY(16),
-        _pxX(32),_pxY(24), _pxX(40),_pxY(24), _pxX(32),_pxY(16), _pxX(40),_pxY(16),
-        _pxX(40),_pxY(32), _pxX(48),_pxY(32), _pxX(40),_pxY(24), _pxX(48),_pxY(24),
-        _pxX(48),_pxY(24), _pxX(56),_pxY(24), _pxX(48),_pxY(32), _pxX(56),_pxY(32),
-        _pxX(40),_pxY(24), _pxX(48),_pxY(24), _pxX(40),_pxY(16), _pxX(48),_pxY(16),
-        _pxX(56),_pxY(24), _pxX(64),_pxY(24), _pxX(56),_pxY(16), _pxX(64),_pxY(16),
+        _pxX(48), _pxY(24), _pxX(56), _pxY(24), _pxX(48), _pxY(16), _pxX(56), _pxY(16),
+        _pxX(32), _pxY(24), _pxX(40), _pxY(24), _pxX(32), _pxY(16), _pxX(40), _pxY(16),
+        _pxX(40), _pxY(32), _pxX(48), _pxY(32), _pxX(40), _pxY(24), _pxX(48), _pxY(24),
+        _pxX(48), _pxY(24), _pxX(56), _pxY(24), _pxX(48), _pxY(32), _pxX(56), _pxY(32),
+        _pxX(40), _pxY(24), _pxX(48), _pxY(24), _pxX(40), _pxY(16), _pxX(48), _pxY(16),
+        _pxX(56), _pxY(24), _pxX(64), _pxY(24), _pxX(56), _pxY(16), _pxX(64), _pxY(16),
       ]),
       texture,
       { alpha: true, doubleSide: true }
     );
     headGroup.add(head2Geo);
 
-    // Body
+
     const bodyGroup = new Group();
     bodyGroup.position.y = 2;
 
     const bodyGeo = texturePainting(
       new BoxGeometry(8, 12, 4),
       new Float32Array([
-        _pxX(28),_pxY(12), _pxX(32),_pxY(12), _pxX(28),_pxY(0), _pxX(32),_pxY(0),
-        _pxX(16),_pxY(12), _pxX(20),_pxY(12), _pxX(16),_pxY(0), _pxX(20),_pxY(0),
-        _pxX(20),_pxY(16), _pxX(28),_pxY(16), _pxX(20),_pxY(12), _pxX(28),_pxY(12),
-        _pxX(28),_pxY(12), _pxX(36),_pxY(12), _pxX(28),_pxY(16), _pxX(36),_pxY(16),
-        _pxX(20),_pxY(12), _pxX(28),_pxY(12), _pxX(20),_pxY(0), _pxX(28),_pxY(0),
-        _pxX(32),_pxY(12), _pxX(40),_pxY(12), _pxX(32),_pxY(0), _pxX(40),_pxY(0),
+        _pxX(28), _pxY(12), _pxX(32), _pxY(12), _pxX(28), _pxY(0), _pxX(32), _pxY(0),
+        _pxX(16), _pxY(12), _pxX(20), _pxY(12), _pxX(16), _pxY(0), _pxX(20), _pxY(0),
+        _pxX(20), _pxY(16), _pxX(28), _pxY(16), _pxX(20), _pxY(12), _pxX(28), _pxY(12),
+        _pxX(28), _pxY(12), _pxX(36), _pxY(12), _pxX(28), _pxY(16), _pxX(36), _pxY(16),
+        _pxX(20), _pxY(12), _pxX(28), _pxY(12), _pxX(20), _pxY(0), _pxX(28), _pxY(0),
+        _pxX(32), _pxY(12), _pxX(40), _pxY(12), _pxX(32), _pxY(0), _pxX(40), _pxY(0),
       ]),
       texture
     );
     bodyGroup.add(bodyGeo);
 
-    // Left Arm (mirrored from right in 32px format)
+
     const leftArmGroup = new Group();
     leftArmGroup.position.set(6, 2 + 4, 0);
 
     const leftArmGeo = texturePainting(
       new BoxGeometry(4, 12, 4),
       new Float32Array([
-        _pxX(44),_pxY(12), _pxX(40),_pxY(12), _pxX(44),_pxY(0), _pxX(40),_pxY(0),
-        _pxX(52),_pxY(12), _pxX(48),_pxY(12), _pxX(52),_pxY(0), _pxX(48),_pxY(0),
-        _pxX(48),_pxY(16), _pxX(44),_pxY(16), _pxX(48),_pxY(12), _pxX(44),_pxY(12),
-        _pxX(52),_pxY(12), _pxX(48),_pxY(12), _pxX(52),_pxY(16), _pxX(48),_pxY(16),
-        _pxX(48),_pxY(12), _pxX(44),_pxY(12), _pxX(48),_pxY(0), _pxX(44),_pxY(0),
-        _pxX(56),_pxY(12), _pxX(52),_pxY(12), _pxX(56),_pxY(0), _pxX(52),_pxY(0),
+        _pxX(44), _pxY(12), _pxX(40), _pxY(12), _pxX(44), _pxY(0), _pxX(40), _pxY(0),
+        _pxX(52), _pxY(12), _pxX(48), _pxY(12), _pxX(52), _pxY(0), _pxX(48), _pxY(0),
+        _pxX(48), _pxY(16), _pxX(44), _pxY(16), _pxX(48), _pxY(12), _pxX(44), _pxY(12),
+        _pxX(52), _pxY(12), _pxX(48), _pxY(12), _pxX(52), _pxY(16), _pxX(48), _pxY(16),
+        _pxX(48), _pxY(12), _pxX(44), _pxY(12), _pxX(48), _pxY(0), _pxX(44), _pxY(0),
+        _pxX(56), _pxY(12), _pxX(52), _pxY(12), _pxX(56), _pxY(0), _pxX(52), _pxY(0),
       ]),
       texture
     );
     leftArmGeo.position.y -= 4;
     leftArmGroup.add(leftArmGeo);
 
-    // Right Arm
+
     const rightArmGroup = new Group();
     rightArmGroup.position.set(-6, 2 + 4, 0);
 
     const rightArmGeo = texturePainting(
       new BoxGeometry(4, 12, 4),
       new Float32Array([
-        _pxX(48),_pxY(12), _pxX(52),_pxY(12), _pxX(48),_pxY(0), _pxX(52),_pxY(0),
-        _pxX(40),_pxY(12), _pxX(44),_pxY(12), _pxX(40),_pxY(0), _pxX(44),_pxY(0),
-        _pxX(44),_pxY(16), _pxX(48),_pxY(16), _pxX(44),_pxY(12), _pxX(48),_pxY(12),
-        _pxX(48),_pxY(12), _pxX(52),_pxY(12), _pxX(48),_pxY(16), _pxX(52),_pxY(16),
-        _pxX(44),_pxY(12), _pxX(48),_pxY(12), _pxX(44),_pxY(0), _pxX(48),_pxY(0),
-        _pxX(52),_pxY(12), _pxX(56),_pxY(12), _pxX(52),_pxY(0), _pxX(56),_pxY(0),
+        _pxX(48), _pxY(12), _pxX(52), _pxY(12), _pxX(48), _pxY(0), _pxX(52), _pxY(0),
+        _pxX(40), _pxY(12), _pxX(44), _pxY(12), _pxX(40), _pxY(0), _pxX(44), _pxY(0),
+        _pxX(44), _pxY(16), _pxX(48), _pxY(16), _pxX(44), _pxY(12), _pxX(48), _pxY(12),
+        _pxX(48), _pxY(12), _pxX(52), _pxY(12), _pxX(48), _pxY(16), _pxX(52), _pxY(16),
+        _pxX(44), _pxY(12), _pxX(48), _pxY(12), _pxX(44), _pxY(0), _pxX(48), _pxY(0),
+        _pxX(52), _pxY(12), _pxX(56), _pxY(12), _pxX(52), _pxY(0), _pxX(56), _pxY(0),
       ]),
       texture
     );
     rightArmGeo.position.y -= 4;
     rightArmGroup.add(rightArmGeo);
 
-    // Left Leg (mirrored)
+
     const leftLegGroup = new Group();
     leftLegGroup.position.set(2, -10 + 4, 0);
 
     const leftLegGeo = texturePainting(
       new BoxGeometry(4, 12, 4),
       new Float32Array([
-        _pxX(4),_pxY(12), _pxX(0),_pxY(12), _pxX(4),_pxY(0), _pxX(0),_pxY(0),
-        _pxX(12),_pxY(12), _pxX(8),_pxY(12), _pxX(12),_pxY(0), _pxX(8),_pxY(0),
-        _pxX(8),_pxY(16), _pxX(4),_pxY(16), _pxX(8),_pxY(12), _pxX(4),_pxY(12),
-        _pxX(12),_pxY(12), _pxX(8),_pxY(12), _pxX(12),_pxY(16), _pxX(8),_pxY(16),
-        _pxX(8),_pxY(12), _pxX(4),_pxY(12), _pxX(8),_pxY(0), _pxX(4),_pxY(0),
-        _pxX(16),_pxY(12), _pxX(12),_pxY(12), _pxX(16),_pxY(0), _pxX(12),_pxY(0),
+        _pxX(4), _pxY(12), _pxX(0), _pxY(12), _pxX(4), _pxY(0), _pxX(0), _pxY(0),
+        _pxX(12), _pxY(12), _pxX(8), _pxY(12), _pxX(12), _pxY(0), _pxX(8), _pxY(0),
+        _pxX(8), _pxY(16), _pxX(4), _pxY(16), _pxX(8), _pxY(12), _pxX(4), _pxY(12),
+        _pxX(12), _pxY(12), _pxX(8), _pxY(12), _pxX(12), _pxY(16), _pxX(8), _pxY(16),
+        _pxX(8), _pxY(12), _pxX(4), _pxY(12), _pxX(8), _pxY(0), _pxX(4), _pxY(0),
+        _pxX(16), _pxY(12), _pxX(12), _pxY(12), _pxX(16), _pxY(0), _pxX(12), _pxY(0),
       ]),
       texture
     );
     leftLegGeo.position.y -= 4;
     leftLegGroup.add(leftLegGeo);
 
-    // Right Leg
+
     const rightLegGroup = new Group();
     rightLegGroup.position.set(-2, -10 + 4, 0);
 
     const rightLegGeo = texturePainting(
       new BoxGeometry(4, 12, 4),
       new Float32Array([
-        _pxX(8),_pxY(12), _pxX(12),_pxY(12), _pxX(8),_pxY(0), _pxX(12),_pxY(0),
-        _pxX(0),_pxY(12), _pxX(4),_pxY(12), _pxX(0),_pxY(0), _pxX(4),_pxY(0),
-        _pxX(4),_pxY(16), _pxX(8),_pxY(16), _pxX(4),_pxY(12), _pxX(8),_pxY(12),
-        _pxX(8),_pxY(12), _pxX(12),_pxY(12), _pxX(8),_pxY(16), _pxX(12),_pxY(16),
-        _pxX(4),_pxY(12), _pxX(8),_pxY(12), _pxX(4),_pxY(0), _pxX(8),_pxY(0),
-        _pxX(12),_pxY(12), _pxX(16),_pxY(12), _pxX(12),_pxY(0), _pxX(16),_pxY(0),
+        _pxX(8), _pxY(12), _pxX(12), _pxY(12), _pxX(8), _pxY(0), _pxX(12), _pxY(0),
+        _pxX(0), _pxY(12), _pxX(4), _pxY(12), _pxX(0), _pxY(0), _pxX(4), _pxY(0),
+        _pxX(4), _pxY(16), _pxX(8), _pxY(16), _pxX(4), _pxY(12), _pxX(8), _pxY(12),
+        _pxX(8), _pxY(12), _pxX(12), _pxY(12), _pxX(8), _pxY(16), _pxX(12), _pxY(16),
+        _pxX(4), _pxY(12), _pxX(8), _pxY(12), _pxX(4), _pxY(0), _pxX(8), _pxY(0),
+        _pxX(12), _pxY(12), _pxX(16), _pxY(12), _pxX(12), _pxY(0), _pxX(16), _pxY(0),
       ]),
       texture
     );
@@ -587,10 +596,30 @@ export class SkinViewerCore {
     return model;
   }
 
-  private async buildCapeModel(capeDataURL: string): Promise<Group> {
-    const texture = await this.loadTexture(capeDataURL);
-    const _pxX = (num: number) => num / 64;
-    const _pxY = (num: number) => (32 - num) / 32;
+  private async getCapeTexture(capeUrl: string): Promise<Texture> {
+    const texture = await this.loadTexture(capeUrl);
+
+    if (texture.source.data.width === 64) {
+      return texture;
+    }
+
+    const width = Math.ceil(texture.source.data.width / 64) * 64;
+    const height = Math.ceil(texture.source.data.height / 32) * 32;
+
+    const canvas = document.createElement('canvas');
+    canvas.width = width;
+    canvas.height = height;
+    const ctx = canvas.getContext('2d');
+    if (!ctx) {
+      throw new Error('Failed to get context');
+    }
+
+    ctx.drawImage(texture.source.data, 0, 0);
+    return new CanvasTexture(canvas);
+  }
+
+  private async buildCapeModel(capeURL: string): Promise<Group> {
+    const texture = await this.getCapeTexture(capeURL);
 
     const capeGroup = new Group();
     capeGroup.position.set(0, 8, -2);
@@ -598,12 +627,18 @@ export class SkinViewerCore {
     const capeGeo = texturePainting(
       new BoxGeometry(10, 16, 1),
       new Float32Array([
-        _pxX(0),_pxY(1), _pxX(0),_pxY(1), _pxX(0),_pxY(17), _pxX(0),_pxY(17),
-        _pxX(12),_pxY(1), _pxX(12),_pxY(1), _pxX(12),_pxY(17), _pxX(12),_pxY(17),
-        _pxX(1),_pxY(0), _pxX(11),_pxY(0), _pxX(1),_pxY(0), _pxX(11),_pxY(0),
-        _pxX(11),_pxY(0), _pxX(21),_pxY(0), _pxX(11),_pxY(0), _pxX(21),_pxY(0),
-        _pxX(12),_pxY(1), _pxX(22),_pxY(1), _pxX(12),_pxY(17), _pxX(22),_pxY(17),
-        _pxX(1),_pxY(1), _pxX(11),_pxY(1), _pxX(1),_pxY(17), _pxX(11),_pxY(17),
+        0, 0.96875, 0.015625, 0.96875,
+        0, 0.46875, 0.015625, 0.46875,
+        0.171875, 0.96875, 0.1875, 0.96875,
+        0.171875, 0.46875, 0.1875, 0.46875,
+        0.015625, 1, 0.171875, 1,
+        0.015625, 0.96875, 0.171875, 0.96875,
+        0.171875, 1, 0.328125, 1,
+        0.171875, 0.96875, 0.328125, 0.96875,
+        0.1875, 0.96875, 0.34375, 0.96875,
+        0.1875, 0.46875, 0.34375, 0.46875,
+        0.015625, 0.96875, 0.171875, 0.96875,
+        0.015625, 0.46875, 0.171875, 0.46875
       ]),
       texture
     );
@@ -613,8 +648,8 @@ export class SkinViewerCore {
     return capeGroup;
   }
 
-  private async buildElytraModel(capeDataURL: string): Promise<Group> {
-    const texture = await this.loadTexture(capeDataURL);
+  private async buildElytraModel(capeURL: string): Promise<Group> {
+    const texture = await this.loadTexture(capeURL);
     const _pxX = (num: number) => num / 64;
     const _pxY = (num: number) => (32 - num) / 32;
 
@@ -626,12 +661,12 @@ export class SkinViewerCore {
     const leftGeo = texturePainting(
       new BoxGeometry(9, 20, 3),
       new Float32Array([
-        _pxX(24),_pxY(2), _pxX(22),_pxY(2), _pxX(24),_pxY(22), _pxX(22),_pxY(22),
-        _pxX(36),_pxY(2), _pxX(34),_pxY(2), _pxX(36),_pxY(22), _pxX(34),_pxY(22),
-        _pxX(34),_pxY(0), _pxX(24),_pxY(0), _pxX(34),_pxY(2), _pxX(24),_pxY(2),
-        _pxX(44),_pxY(2), _pxX(34),_pxY(2), _pxX(44),_pxY(0), _pxX(34),_pxY(0),
-        _pxX(34),_pxY(2), _pxX(24),_pxY(2), _pxX(34),_pxY(22), _pxX(24),_pxY(22),
-        _pxX(46),_pxY(2), _pxX(36),_pxY(2), _pxX(46),_pxY(22), _pxX(36),_pxY(22),
+        _pxX(24), _pxY(2), _pxX(22), _pxY(2), _pxX(24), _pxY(22), _pxX(22), _pxY(22),
+        _pxX(36), _pxY(2), _pxX(34), _pxY(2), _pxX(36), _pxY(22), _pxX(34), _pxY(22),
+        _pxX(34), _pxY(0), _pxX(24), _pxY(0), _pxX(34), _pxY(2), _pxX(24), _pxY(2),
+        _pxX(44), _pxY(2), _pxX(34), _pxY(2), _pxX(44), _pxY(0), _pxX(34), _pxY(0),
+        _pxX(34), _pxY(2), _pxX(24), _pxY(2), _pxX(34), _pxY(22), _pxX(24), _pxY(22),
+        _pxX(46), _pxY(2), _pxX(36), _pxY(2), _pxX(46), _pxY(22), _pxX(36), _pxY(22),
       ]),
       texture,
       { alpha: true, doubleSide: true }
@@ -642,12 +677,12 @@ export class SkinViewerCore {
     const rightGeo = texturePainting(
       new BoxGeometry(9, 20, 3),
       new Float32Array([
-        _pxX(34),_pxY(2), _pxX(36),_pxY(2), _pxX(34),_pxY(22), _pxX(36),_pxY(22),
-        _pxX(22),_pxY(2), _pxX(24),_pxY(2), _pxX(22),_pxY(22), _pxX(24),_pxY(22),
-        _pxX(24),_pxY(0), _pxX(34),_pxY(0), _pxX(24),_pxY(2), _pxX(34),_pxY(2),
-        _pxX(34),_pxY(2), _pxX(44),_pxY(2), _pxX(34),_pxY(0), _pxX(44),_pxY(0),
-        _pxX(24),_pxY(2), _pxX(34),_pxY(2), _pxX(24),_pxY(22), _pxX(34),_pxY(22),
-        _pxX(36),_pxY(2), _pxX(46),_pxY(2), _pxX(36),_pxY(22), _pxX(46),_pxY(22),
+        _pxX(34), _pxY(2), _pxX(36), _pxY(2), _pxX(34), _pxY(22), _pxX(36), _pxY(22),
+        _pxX(22), _pxY(2), _pxX(24), _pxY(2), _pxX(22), _pxY(22), _pxX(24), _pxY(22),
+        _pxX(24), _pxY(0), _pxX(34), _pxY(0), _pxX(24), _pxY(2), _pxX(34), _pxY(2),
+        _pxX(34), _pxY(2), _pxX(44), _pxY(2), _pxX(34), _pxY(0), _pxX(44), _pxY(0),
+        _pxX(24), _pxY(2), _pxX(34), _pxY(2), _pxX(24), _pxY(22), _pxX(34), _pxY(22),
+        _pxX(36), _pxY(2), _pxX(46), _pxY(2), _pxX(36), _pxY(22), _pxX(46), _pxY(22),
       ]),
       texture,
       { alpha: true, doubleSide: true }
@@ -663,42 +698,49 @@ export class SkinViewerCore {
 
   startAnimation(replay?: boolean): void {
     if (replay) {
-      this.animStartTime = Date.now();
-    } else {
-      this.animStartTime = Date.now() - (this.animPauseTime ?? 0);
+      this.animTimeOffset = -globalNow();
+      this.animPausedElapsed = null;
+    } else if (this.animPausedElapsed !== null) {
+      this.animTimeOffset = this.animPausedElapsed - globalNow();
+      this.animPausedElapsed = null;
     }
     this.playAnim = true;
     this.startRenderLoop();
   }
 
   pauseAnimation(): void {
-    this.animPauseTime = Date.now() - (this.animStartTime ?? Date.now());
+    this.animPausedElapsed = this.getAnimElapsed();
     this.playAnim = false;
     this.timerStopRenderLoop();
   }
 
   setAnimationTime(time: number): void {
-    this.animStartTime = Date.now() - time;
+    this.animPausedElapsed = time;
     if (this.options.skinDataURL || this.options.capeDataURL) {
       this.playAnim = 1;
-      this.render();
     }
   }
 
   async update(options: SkinViewerOptions = {}): Promise<void> {
+    let needReBuildSkin = false;
+
     if (options.slim !== void 0) {
+      needReBuildSkin = options.slim !== this.options.slim;
       this.options.slim = options.slim;
     }
 
     if (options.skinDataURL && options.skinDataURL !== this.options.skinDataURL) {
       this.options.skinDataURL = options.skinDataURL;
+      needReBuildSkin = true;
+    }
+
+    if (needReBuildSkin && this.options.skinDataURL) {
       if (this.skinModel) this.scene.remove(this.skinModel);
 
-      const model = await this.buildSkinModel(options.skinDataURL);
+      const model = await this.buildSkinModel(this.options.skinDataURL);
       this.skinModel = model;
       this.scene.add(model);
       this.playAnim = 1;
-      this.render();
     }
 
     let needReBuildCape = false;
@@ -731,6 +773,8 @@ export class SkinViewerCore {
       if (options.cameraPosition.z !== void 0)
         this.camera.position.z = options.cameraPosition.z;
     }
+
+    this.render();
   }
 
   removeCape(): void {

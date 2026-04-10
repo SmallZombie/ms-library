@@ -1,7 +1,8 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { db, schema, capesDir } from '@/lib/db';
 import { initDb } from '@/lib/db/init';
-import { eq } from 'drizzle-orm';
+import { eq, and } from 'drizzle-orm';
+import { getSession } from '@/lib/auth';
 import path from 'path';
 import fs from 'fs';
 
@@ -10,11 +11,13 @@ export async function GET(
   { params }: { params: Promise<{ id: string }> }
 ) {
   await initDb();
+  const session = await getSession();
+  if (!session) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
   const { id } = await params;
 
   const rows = await db.select()
     .from(schema.capes)
-    .where(eq(schema.capes.id, parseInt(id)))
+    .where(and(eq(schema.capes.id, parseInt(id)), eq(schema.capes.userId, session.userId)))
     .limit(1);
 
   if (rows.length === 0) {
@@ -29,9 +32,19 @@ export async function PUT(
   { params }: { params: Promise<{ id: string }> }
 ) {
   await initDb();
+  const session = await getSession();
+  if (!session) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
   const { id } = await params;
-  const body = await request.json();
 
+  const existing = await db.select({ userId: schema.capes.userId })
+    .from(schema.capes)
+    .where(eq(schema.capes.id, parseInt(id)))
+    .limit(1);
+  if (existing.length === 0 || existing[0].userId !== session.userId) {
+    return NextResponse.json({ error: 'Not found' }, { status: 404 });
+  }
+
+  const body = await request.json();
   const updates: Record<string, unknown> = { updatedAt: new Date() };
 
   if (body.name !== void 0) updates.name = body.name;
@@ -51,11 +64,13 @@ export async function DELETE(
   { params }: { params: Promise<{ id: string }> }
 ) {
   await initDb();
+  const session = await getSession();
+  if (!session) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
   const { id } = await params;
 
   const rows = await db.select()
     .from(schema.capes)
-    .where(eq(schema.capes.id, parseInt(id)))
+    .where(and(eq(schema.capes.id, parseInt(id)), eq(schema.capes.userId, session.userId)))
     .limit(1);
 
   if (rows.length > 0) {
@@ -63,10 +78,9 @@ export async function DELETE(
     if (fs.existsSync(filePath)) {
       fs.unlinkSync(filePath);
     }
+    await db.delete(schema.capes)
+      .where(eq(schema.capes.id, parseInt(id)));
   }
-
-  await db.delete(schema.capes)
-    .where(eq(schema.capes.id, parseInt(id)));
 
   return NextResponse.json({ success: true });
 }

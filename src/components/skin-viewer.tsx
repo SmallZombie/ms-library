@@ -91,6 +91,17 @@ export function SkinViewer({
     }
   }, [skinUrl, capeUrl, slim, elytra]);
 
+  useEffect(() => {
+    const viewer = viewerRef.current;
+    if (!viewer) return;
+
+    if (animate) {
+      viewer.startAnimation();
+    } else {
+      viewer.pauseAnimation();
+    }
+  }, [animate]);
+
   return (
     <canvas
       ref={canvasRef}

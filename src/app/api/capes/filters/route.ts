@@ -1,15 +1,21 @@
 import { NextResponse } from 'next/server';
 import { db, schema } from '@/lib/db';
 import { initDb } from '@/lib/db/init';
-import { sql } from 'drizzle-orm';
+import { getSession } from '@/lib/auth';
+import { sql, eq, and } from 'drizzle-orm';
 
 export async function GET() {
   await initDb();
+  const session = await getSession();
+  if (!session) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
 
   const [typeRows, tagRows] = await Promise.all([
-    db.selectDistinct({ type: schema.capes.type }).from(schema.capes),
-    db.select({ tags: schema.capes.tags }).from(schema.capes)
-      .where(sql`${schema.capes.tags} != '[]'`),
+    db.selectDistinct({ type: schema.capes.type })
+      .from(schema.capes)
+      .where(eq(schema.capes.userId, session.userId)),
+    db.select({ tags: schema.capes.tags })
+      .from(schema.capes)
+      .where(and(eq(schema.capes.userId, session.userId), sql`${schema.capes.tags} != '[]'`)),
   ]);
 
   const types = typeRows

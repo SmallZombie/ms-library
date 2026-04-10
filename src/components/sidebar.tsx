@@ -1,29 +1,52 @@
 'use client';
 
 import Link from 'next/link';
-import { usePathname } from 'next/navigation';
+import Image from 'next/image';
+import { usePathname, useRouter } from 'next/navigation';
 import { cn } from '@/lib/utils';
-import { ThemeToggle } from './theme-toggle';
-import { User, Flag, Plus, Menu, X } from 'lucide-react';
+import { useAuth } from './auth-provider';
+import { User, Shirt, Menu, X, Users, Settings, Shield, LogOut } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { useState } from 'react';
 
 const navItems = [
   { href: '/skins', label: '皮肤', icon: User },
-  { href: '/capes', label: '披风', icon: Flag },
+  { href: '/capes', label: '披风', icon: Shirt },
+  { href: '/profiles', label: '角色', icon: Users },
+];
+
+const adminItems = [
+  { href: '/admin/users', label: '用户管理', icon: Shield },
+  { href: '/admin/settings', label: '站点设置', icon: Settings },
 ];
 
 export function Sidebar() {
   const pathname = usePathname();
+  const router = useRouter();
+  const { user, logout } = useAuth();
   const [mobileOpen, setMobileOpen] = useState(false);
 
-  const currentSection = pathname.startsWith('/capes') ? 'capes' : 'skins';
+  if (pathname === '/login' || pathname === '/register') return null;
+
+  async function handleLogout() {
+    await logout();
+    router.push('/login');
+  }
 
   return (
     <>
       {/* Mobile header */}
       <div className='md:hidden fixed top-0 left-0 right-0 z-50 flex items-center justify-between border-b bg-background px-4 h-14'>
-        <Link href='/' className='font-bold text-lg'>MSLibrary</Link>
+        <Link href='/' className='flex items-center gap-2 font-bold text-lg'>
+          <Image
+            src='/logo.png'
+            alt='MSLibrary Logo'
+            width={20}
+            height={20}
+            className='rounded-sm'
+          />
+          <span>MSLibrary</span>
+        </Link>
         <Button
           variant='ghost'
           size='icon'
@@ -50,13 +73,19 @@ export function Sidebar() {
         )}
       >
         <div className='flex items-center justify-between px-4 h-14 border-b'>
-          <Link href='/' className='font-bold text-lg tracking-tight'>
-            MSLibrary
+          <Link href='/' className='flex items-center gap-2 font-bold text-lg tracking-tight'>
+            <Image
+              src='/logo.png'
+              alt='MSLibrary Logo'
+              width={20}
+              height={20}
+              className='rounded-sm'
+            />
+            <span>MSLibrary</span>
           </Link>
-          <ThemeToggle />
         </div>
 
-        <nav className='flex-1 px-3 py-4 space-y-1'>
+        <nav className='flex-1 px-3 py-4 space-y-1 overflow-y-auto'>
           {navItems.map((item) => {
             const isActive = pathname.startsWith(item.href);
             return (
@@ -76,18 +105,60 @@ export function Sidebar() {
               </Link>
             );
           })}
+
+          {user?.isAdmin && (
+            <>
+              <div className='pt-4 pb-1 px-3'>
+                <span className='text-xs font-medium text-muted-foreground uppercase tracking-wider'>
+                  管理
+                </span>
+              </div>
+              {adminItems.map((item) => {
+                const isActive = pathname.startsWith(item.href);
+                return (
+                  <Link
+                    key={item.href}
+                    href={item.href}
+                    onClick={() => setMobileOpen(false)}
+                    className={cn(
+                      'flex items-center gap-3 rounded-md px-3 py-2 text-sm font-medium transition-colors',
+                      isActive
+                        ? 'bg-accent text-accent-foreground'
+                        : 'text-muted-foreground hover:bg-accent hover:text-accent-foreground'
+                    )}
+                  >
+                    <item.icon className='h-4 w-4' />
+                    {item.label}
+                  </Link>
+                );
+              })}
+            </>
+          )}
         </nav>
 
-        <div className='px-3 pb-4'>
-          <Link
-            href={`/${currentSection}/add`}
-            onClick={() => setMobileOpen(false)}
-          >
-            <Button className='w-full gap-2' size='sm'>
-              <Plus className='h-4 w-4' />
-              添加{currentSection === 'skins' ? '皮肤' : '披风'}
-            </Button>
-          </Link>
+        <div className='px-3 pb-4 space-y-2'>
+          {user && (
+            <div className='flex items-center justify-between px-1 pt-2 border-t'>
+              <Link
+                href='/settings'
+                onClick={() => setMobileOpen(false)}
+                className='text-sm text-muted-foreground truncate hover:text-foreground transition-colors'
+                title='账户设置'
+              >
+                {user.username}
+              </Link>
+              <div className='flex items-center gap-0.5'>
+                <Link href='/settings' onClick={() => setMobileOpen(false)}>
+                  <Button variant='ghost' size='icon' title='账户设置'>
+                    <Settings className='h-4 w-4' />
+                  </Button>
+                </Link>
+                <Button variant='ghost' size='icon' onClick={handleLogout} title='退出登录'>
+                  <LogOut className='h-4 w-4' />
+                </Button>
+              </div>
+            </div>
+          )}
         </div>
       </aside>
     </>

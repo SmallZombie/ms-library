@@ -1,13 +1,16 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { db, schema, capesDir } from '@/lib/db';
 import { initDb } from '@/lib/db/init';
-import { eq, like, sql, asc, desc } from 'drizzle-orm';
+import { eq, like, sql, asc, desc, and } from 'drizzle-orm';
+import { getSession } from '@/lib/auth';
 import path from 'path';
 import fs from 'fs';
 import { randomUUID } from 'crypto';
 
 export async function GET(request: NextRequest) {
   await initDb();
+  const session = await getSession();
+  if (!session) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
 
   const searchParams = request.nextUrl.searchParams;
   const keyword = searchParams.get('keyword');
@@ -17,7 +20,7 @@ export async function GET(request: NextRequest) {
   const offset = parseInt(searchParams.get('offset') || '0');
   const limit = parseInt(searchParams.get('limit') || '20');
 
-  const conditions = [];
+  const conditions = [eq(schema.capes.userId, session.userId)];
   if (keyword) {
     conditions.push(like(schema.capes.name, `%${keyword}%`));
   }
@@ -25,9 +28,7 @@ export async function GET(request: NextRequest) {
     conditions.push(eq(schema.capes.type, type));
   }
 
-  const where = conditions.length > 0
-    ? sql`${sql.join(conditions, sql` AND `)}`
-    : void 0;
+  const where = sql`${sql.join(conditions, sql` AND `)}`;
 
   const [countResult, rows] = await Promise.all([
     db.select({ count: sql<number>`COUNT(*)` })
@@ -57,6 +58,8 @@ export async function GET(request: NextRequest) {
 
 export async function POST(request: NextRequest) {
   await initDb();
+  const session = await getSession();
+  if (!session) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
 
   const body = await request.json();
   const { name, type, tags, source, file, fileMD5 } = body;
@@ -67,7 +70,7 @@ export async function POST(request: NextRequest) {
 
   const existing = await db.select()
     .from(schema.capes)
-    .where(eq(schema.capes.fileHash, fileMD5))
+    .where(and(eq(schema.capes.fileHash, fileMD5), eq(schema.capes.userId, session.userId)))
     .limit(1);
 
   if (existing.length > 0) {
@@ -82,6 +85,7 @@ export async function POST(request: NextRequest) {
 
   const now = new Date();
   const result = await db.insert(schema.capes).values({
+    userId: session.userId,
     name: name || null,
     type: type || null,
     tags: tags || [],

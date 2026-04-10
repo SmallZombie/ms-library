@@ -1,26 +1,22 @@
 'use client';
 
-import { useState, useEffect, use, useCallback } from 'react';
+import { useState, useEffect, use } from 'react';
 import { useRouter } from 'next/navigation';
 import { SkinViewer } from '@/components/skin-viewer';
 import { TagInput } from '@/components/tag-input';
 import { CapeTile } from '@/components/cape-tile';
+import { CapeSelectDialog, type CapeSelectItem } from '@/components/cape-select-dialog';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import { Badge } from '@/components/ui/badge';
 import { Separator } from '@/components/ui/separator';
 import { Skeleton } from '@/components/ui/skeleton';
 import {
   Dialog,
-  DialogContent,
-  DialogHeader,
-  DialogTitle,
   DialogTrigger,
 } from '@/components/ui/dialog';
-import { ScrollArea } from '@/components/ui/scroll-area';
-import { ArrowLeft, Save, Trash2, ExternalLink, Link2, Unlink, Loader2 } from 'lucide-react';
+import { ArrowLeft, Save, Trash2, ExternalLink, Link2, Unlink, Loader2, Pause, Play, Download } from 'lucide-react';
 
 interface SkinData {
   id: number;
@@ -42,30 +38,22 @@ interface SkinData {
   } | null;
 }
 
-interface CapeListItem {
-  id: number;
-  name: string | null;
-  type: string | null;
-  tags: string[];
-  filePath: string;
-}
-
 export default function SkinDetailPage({ params }: { params: Promise<{ id: string }> }) {
   const { id } = use(params);
   const router = useRouter();
   const [skin, setSkin] = useState<SkinData | null>(null);
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
+  const [isAnimating, setIsAnimating] = useState(false);
 
   const [name, setName] = useState('');
+  const [slim, setSlim] = useState(false);
   const [type, setType] = useState('');
   const [tags, setTags] = useState<string[]>([]);
   const [source, setSource] = useState('');
-  const [linkedCapeId, setLinkedCapeId] = useState<number | null>(null);
+  const [selectedCape, setSelectedCape] = useState<CapeSelectItem | null>(null);
 
   const [capeDialogOpen, setCapeDialogOpen] = useState(false);
-  const [allCapes, setAllCapes] = useState<CapeListItem[]>([]);
-  const [capesLoading, setCapesLoading] = useState(false);
 
   useEffect(() => {
     fetch(`/api/skins/${id}`)
@@ -76,30 +64,17 @@ export default function SkinDetailPage({ params }: { params: Promise<{ id: strin
       .then(data => {
         setSkin(data);
         setName(data.name || '');
+        setSlim(data.slim ?? false);
         setType(data.type || '');
         setTags(data.tags || []);
         setSource(data.source || '');
-        setLinkedCapeId(data.linkedCapeId ?? null);
+        setSelectedCape(data.cape ?? null);
         setLoading(false);
       })
       .catch(() => {
         setLoading(false);
       });
   }, [id]);
-
-  const loadCapes = useCallback(async () => {
-    setCapesLoading(true);
-    const res = await fetch('/api/capes?limit=100&order=1');
-    const data = await res.json();
-    setAllCapes(data.list);
-    setCapesLoading(false);
-  }, []);
-
-  useEffect(() => {
-    if (capeDialogOpen) {
-      loadCapes();
-    }
-  }, [capeDialogOpen, loadCapes]);
 
   const handleSave = async () => {
     setSaving(true);
@@ -108,10 +83,11 @@ export default function SkinDetailPage({ params }: { params: Promise<{ id: strin
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({
         name: name || null,
+        slim,
         type: type || null,
         tags,
         source: source || null,
-        linkedCapeId,
+        linkedCapeId: selectedCape?.id ?? null,
       }),
     });
     setSaving(false);
@@ -125,15 +101,6 @@ export default function SkinDetailPage({ params }: { params: Promise<{ id: strin
     if (!confirm('确定要删除这个皮肤吗？')) return;
     await fetch(`/api/skins/${id}`, { method: 'DELETE' });
     router.push('/skins');
-  };
-
-  const handleSelectCape = (capeId: number) => {
-    setLinkedCapeId(capeId);
-    setCapeDialogOpen(false);
-  };
-
-  const handleUnlinkCape = () => {
-    setLinkedCapeId(null);
   };
 
   if (loading) {
@@ -164,13 +131,7 @@ export default function SkinDetailPage({ params }: { params: Promise<{ id: strin
   }
 
   const skinUrl = `/api/files/${skin.filePath}`;
-  const capeUrl = skin.cape ? `/api/files/${skin.cape.filePath}` : void 0;
-
-  const linkedCape = linkedCapeId
-    ? (skin.cape && skin.cape.id === linkedCapeId
-      ? skin.cape
-      : allCapes.find(c => c.id === linkedCapeId) || null)
-    : null;
+  const capeUrl = selectedCape ? `/api/files/${selectedCape.filePath}` : void 0;
 
   return (
     <div className='p-6 max-w-5xl mx-auto space-y-6'>
@@ -179,20 +140,41 @@ export default function SkinDetailPage({ params }: { params: Promise<{ id: strin
           <ArrowLeft className='h-4 w-4' />
         </Button>
         <h1 className='text-2xl font-bold'>{skin.name || `皮肤 #${skin.id}`}</h1>
-        {skin.slim && <Badge variant='secondary'>纤细</Badge>}
       </div>
 
       <div className='grid md:grid-cols-2 gap-6'>
         <Card>
-          <CardContent className='flex justify-center p-6'>
-            <SkinViewer
-              skinUrl={skinUrl}
-              capeUrl={capeUrl}
-              slim={skin.slim}
-              width={350}
-              height={450}
-              animate={true}
-            />
+          <CardContent className='p-6 space-y-4'>
+            <div className='flex justify-center'>
+              <SkinViewer
+                key={`${skin.filePath}:${selectedCape?.filePath ?? 'no-cape'}`}
+                skinUrl={skinUrl}
+                capeUrl={capeUrl}
+                slim={slim}
+                width={350}
+                height={600}
+                animate={isAnimating}
+              />
+            </div>
+            <div className='flex justify-center gap-2'>
+              <Button
+                variant='outline'
+                size='sm'
+                onClick={() => setIsAnimating((prev) => !prev)}
+                className='gap-1.5'
+              >
+                {isAnimating ? (
+                    <Pause className='h-3.5 w-3.5' />
+                ) : (
+                    <Play className='h-3.5 w-3.5' />
+                )}
+              </Button>
+              <Button variant='outline' size='sm' className='gap-1.5' asChild>
+                <a href={skinUrl} download={`${name}.png`}>
+                  <Download className='h-3.5 w-3.5' />
+                </a>
+              </Button>
+            </div>
           </CardContent>
         </Card>
 
@@ -209,6 +191,17 @@ export default function SkinDetailPage({ params }: { params: Promise<{ id: strin
                   onChange={(e) => setName(e.target.value)}
                   placeholder='皮肤名称'
                 />
+              </div>
+
+              <div className='flex items-center gap-2'>
+                <input
+                  type='checkbox'
+                  id='detail-slim'
+                  checked={slim}
+                  onChange={(e) => setSlim(e.target.checked)}
+                  className='rounded'
+                />
+                <Label htmlFor='detail-slim'>纤细模型 (Alex)</Label>
               </div>
 
               <div className='space-y-2'>
@@ -251,14 +244,14 @@ export default function SkinDetailPage({ params }: { params: Promise<{ id: strin
                   关联披风
                 </Label>
 
-                {linkedCape ? (
+                {selectedCape ? (
                   <div className='space-y-2'>
                     <CapeTile
-                      id={linkedCape.id}
-                      name={linkedCape.name}
-                      type={linkedCape.type}
-                      tags={linkedCape.tags}
-                      filePath={linkedCape.filePath}
+                      id={selectedCape.id}
+                      name={selectedCape.name}
+                      type={selectedCape.type}
+                      tags={selectedCape.tags}
+                      filePath={selectedCape.filePath}
                       selected={true}
                     />
                     <div className='flex gap-2'>
@@ -270,13 +263,11 @@ export default function SkinDetailPage({ params }: { params: Promise<{ id: strin
                           </Button>
                         </DialogTrigger>
                         <CapeSelectDialog
-                          capes={allCapes}
-                          loading={capesLoading}
-                          selectedId={linkedCapeId}
-                          onSelect={handleSelectCape}
+                          selectedId={selectedCape.id}
+                          onSelect={(cape) => { setSelectedCape(cape); setCapeDialogOpen(false); }}
                         />
                       </Dialog>
-                      <Button variant='outline' size='sm' onClick={handleUnlinkCape} className='gap-1.5'>
+                      <Button variant='outline' size='sm' onClick={() => setSelectedCape(null)} className='gap-1.5'>
                         <Unlink className='h-3.5 w-3.5' />
                         取消关联
                       </Button>
@@ -291,10 +282,8 @@ export default function SkinDetailPage({ params }: { params: Promise<{ id: strin
                       </Button>
                     </DialogTrigger>
                     <CapeSelectDialog
-                      capes={allCapes}
-                      loading={capesLoading}
-                      selectedId={linkedCapeId}
-                      onSelect={handleSelectCape}
+                      selectedId={null}
+                      onSelect={(cape) => { setSelectedCape(cape); setCapeDialogOpen(false); }}
                     />
                   </Dialog>
                 )}
@@ -323,51 +312,5 @@ export default function SkinDetailPage({ params }: { params: Promise<{ id: strin
         </div>
       </div>
     </div>
-  );
-}
-
-function CapeSelectDialog({
-  capes,
-  loading,
-  selectedId,
-  onSelect,
-}: {
-  capes: CapeListItem[];
-  loading: boolean;
-  selectedId: number | null;
-  onSelect: (id: number) => void;
-}) {
-  return (
-    <DialogContent className='max-w-md'>
-      <DialogHeader>
-        <DialogTitle>选择披风</DialogTitle>
-      </DialogHeader>
-      <ScrollArea className='max-h-96'>
-        {loading ? (
-          <div className='flex items-center justify-center py-8'>
-            <Loader2 className='h-6 w-6 animate-spin text-muted-foreground' />
-          </div>
-        ) : capes.length === 0 ? (
-          <p className='text-center text-muted-foreground py-8'>
-            暂无披风，请先添加披风
-          </p>
-        ) : (
-          <div className='space-y-2 pr-4'>
-            {capes.map((cape) => (
-              <CapeTile
-                key={cape.id}
-                id={cape.id}
-                name={cape.name}
-                type={cape.type}
-                tags={cape.tags}
-                filePath={cape.filePath}
-                selected={cape.id === selectedId}
-                onClick={() => onSelect(cape.id)}
-              />
-            ))}
-          </div>
-        )}
-      </ScrollArea>
-    </DialogContent>
   );
 }
