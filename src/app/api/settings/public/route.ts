@@ -22,6 +22,6 @@ export async function GET() {
     siteName,
     allowRegistration: allowRegistration !== 'false',
     turnstileSiteKey: turnstileEnabled === 'true' ? turnstileSiteKey : '',
-    yggdrasilServer: siteUrl,
+    yggdrasilServer: `${siteUrl}/api/yggdrasil`,
   });
 }

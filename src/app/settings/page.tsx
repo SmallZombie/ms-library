@@ -61,9 +61,8 @@ export default function SettingsPage() {
       setOldPassword('');
       setNewPassword('');
       setConfirmPassword('');
-    } catch (e) {
+    } catch {
       setPwError('网络错误');
-      console.log(e);
     } finally {
       setPwLoading(false);
     }

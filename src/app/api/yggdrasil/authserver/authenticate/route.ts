@@ -15,7 +15,6 @@ export async function POST(request: NextRequest) {
 
   const body = await request.json();
   const { username, password, clientToken, requestUser } = body;
-  console.log(`username: ${username}, password: ${password}, clientToken: ${clientToken}, requestUser: ${requestUser}`);
 
   if (!username || !password) {
     return yggError(403, 'ForbiddenOperationException', 'Invalid credentials. Invalid username or password.');

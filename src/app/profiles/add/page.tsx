@@ -1,52 +1,31 @@
 'use client';
 
-import { useState, useEffect } from 'react';
+import { useState } from 'react';
 import { useRouter } from 'next/navigation';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Card, CardContent } from '@/components/ui/card';
+import { SkinTile } from '@/components/skin-tile';
+import { CapeTile } from '@/components/cape-tile';
+import { SkinSelectDialog, type SkinSelectItem } from '@/components/skin-select-dialog';
+import { CapeSelectDialog, type CapeSelectItem } from '@/components/cape-select-dialog';
 import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from '@/components/ui/select';
-import { Loader2, ArrowLeft } from 'lucide-react';
+  Dialog,
+  DialogTrigger,
+} from '@/components/ui/dialog';
+import { Loader2, ArrowLeft, Unlink } from 'lucide-react';
 import Link from 'next/link';
-
-interface SkinItem {
-  id: number;
-  name: string;
-  filePath: string;
-}
-
-interface CapeItem {
-  id: number;
-  name: string;
-  filePath: string;
-}
 
 export default function AddProfilePage() {
   const router = useRouter();
   const [name, setName] = useState('');
-  const [skinId, setSkinId] = useState<string>('');
-  const [capeId, setCapeId] = useState<string>('');
-  const [skins, setSkins] = useState<SkinItem[]>([]);
-  const [capes, setCapes] = useState<CapeItem[]>([]);
+  const [selectedSkin, setSelectedSkin] = useState<SkinSelectItem | null>(null);
+  const [selectedCape, setSelectedCape] = useState<CapeSelectItem | null>(null);
   const [error, setError] = useState('');
   const [loading, setLoading] = useState(false);
-
-  useEffect(() => {
-    Promise.all([
-      fetch('/api/skins?limit=1000').then(r => r.json()),
-      fetch('/api/capes?limit=1000').then(r => r.json()),
-    ]).then(([skinsData, capesData]) => {
-      setSkins(skinsData.list || []);
-      setCapes(capesData.list || []);
-    });
-  }, []);
+  const [skinDialogOpen, setSkinDialogOpen] = useState(false);
+  const [capeDialogOpen, setCapeDialogOpen] = useState(false);
 
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault();
@@ -59,8 +38,8 @@ export default function AddProfilePage() {
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
           name,
-          skinId: skinId ? parseInt(skinId) : null,
-          capeId: capeId ? parseInt(capeId) : null,
+          skinId: selectedSkin?.id ?? null,
+          capeId: selectedCape?.id ?? null,
         }),
       });
       const data = await res.json();
@@ -68,7 +47,7 @@ export default function AddProfilePage() {
         setError(data.error || '创建失败');
         return;
       }
-      router.push('/profiles');
+      router.push(`/profiles/${data.id}`);
     } catch {
       setError('网络错误');
     } finally {
@@ -85,7 +64,7 @@ export default function AddProfilePage() {
         <h1 className='text-2xl font-bold'>创建角色</h1>
       </div>
 
-      <Card>
+      <Card className='gap-0 pt-0'>
         <CardContent className='pt-6'>
           <form onSubmit={handleSubmit} className='space-y-4'>
             <div className='space-y-2'>
@@ -104,36 +83,86 @@ export default function AddProfilePage() {
 
             <div className='space-y-2'>
               <Label>皮肤</Label>
-              <Select value={skinId} onValueChange={setSkinId}>
-                <SelectTrigger>
-                  <SelectValue placeholder='选择皮肤（可选）' />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value='none'>无皮肤</SelectItem>
-                  {skins.map(s => (
-                    <SelectItem key={s.id} value={String(s.id)}>
-                      {s.name || `皮肤 #${s.id}`}
-                    </SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
+              {selectedSkin ? (
+                <div className='space-y-2'>
+                  <SkinTile
+                    id={selectedSkin.id}
+                    name={selectedSkin.name}
+                    type={selectedSkin.type}
+                    tags={selectedSkin.tags}
+                    filePath={selectedSkin.filePath}
+                    slim={selectedSkin.slim}
+                    selected
+                  />
+                  <div className='flex gap-2'>
+                    <Dialog open={skinDialogOpen} onOpenChange={setSkinDialogOpen}>
+                      <DialogTrigger asChild>
+                        <Button variant='outline' size='sm'>更换</Button>
+                      </DialogTrigger>
+                      <SkinSelectDialog
+                        selectedId={selectedSkin.id}
+                        onSelect={(skin) => { setSelectedSkin(skin); setSkinDialogOpen(false); }}
+                      />
+                    </Dialog>
+                    <Button variant='outline' size='sm' onClick={() => setSelectedSkin(null)} className='gap-1.5'>
+                      <Unlink className='h-3.5 w-3.5' />
+                      取消
+                    </Button>
+                  </div>
+                </div>
+              ) : (
+                <Dialog open={skinDialogOpen} onOpenChange={setSkinDialogOpen}>
+                  <DialogTrigger asChild>
+                    <Button variant='outline' className='w-full'>选择皮肤</Button>
+                  </DialogTrigger>
+                  <SkinSelectDialog
+                    selectedId={null}
+                    onSelect={(skin) => { setSelectedSkin(skin); setSkinDialogOpen(false); }}
+                  />
+                </Dialog>
+              )}
             </div>
 
             <div className='space-y-2'>
               <Label>披风</Label>
-              <Select value={capeId} onValueChange={setCapeId}>
-                <SelectTrigger>
-                  <SelectValue placeholder='选择披风（可选）' />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value='none'>无披风</SelectItem>
-                  {capes.map(c => (
-                    <SelectItem key={c.id} value={String(c.id)}>
-                      {c.name || `披风 #${c.id}`}
-                    </SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
+              {selectedCape ? (
+                <div className='space-y-2'>
+                  <CapeTile
+                    id={selectedCape.id}
+                    name={selectedCape.name}
+                    type={selectedCape.type}
+                    tags={selectedCape.tags}
+                    filePath={selectedCape.filePath}
+                    selected
+                  />
+                  <div className='flex gap-2'>
+                    <Dialog open={capeDialogOpen} onOpenChange={setCapeDialogOpen}>
+                      <DialogTrigger asChild>
+                        <Button variant='outline' size='sm'>更换</Button>
+                      </DialogTrigger>
+                      <CapeSelectDialog
+                        selectedId={selectedCape.id}
+                        onSelect={(cape) => { setSelectedCape(cape); setCapeDialogOpen(false); }}
+                      />
+                    </Dialog>
+                    <Button variant='outline' size='sm' onClick={() => setSelectedCape(null)} className='gap-1.5'>
+                      <Unlink className='h-3.5 w-3.5' />
+                      取消
+                    </Button>
+                  </div>
+                </div>
+              ) : (
+                <Dialog open={capeDialogOpen} onOpenChange={setCapeDialogOpen}>
+                  <DialogTrigger asChild>
+                    <Button variant='outline' className='w-full'>选择披风</Button>
+                  </DialogTrigger>
+                  <CapeSelectDialog
+                    selectedId={null}
+                    onSelect={(cape) => { setSelectedCape(cape); setCapeDialogOpen(false); }}
+                  />
+                </Dialog>
+              )}
+              <p className='text-sm text-muted-foreground'>一些 OptiFine 披风可能无法在游戏中正确显示</p>
             </div>
 
             {error && <p className='text-sm text-destructive'>{error}</p>}

@@ -45,7 +45,6 @@ export async function createSession(payload: SessionPayload): Promise<void> {
   const cookieStore = await cookies();
   cookieStore.set(COOKIE_NAME, token, {
     httpOnly: true,
-    secure: process.env.NODE_ENV === 'production',
     sameSite: 'lax',
     path: '/',
     maxAge: EXPIRY_DAYS * 24 * 60 * 60,
@@ -70,7 +69,6 @@ export async function clearSession(): Promise<void> {
   const cookieStore = await cookies();
   cookieStore.set(COOKIE_NAME, '', {
     httpOnly: true,
-    secure: process.env.NODE_ENV === 'production',
     sameSite: 'lax',
     path: '/',
     maxAge: 0,

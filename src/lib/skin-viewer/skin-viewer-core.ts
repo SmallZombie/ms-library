@@ -38,10 +38,12 @@ export class SkinViewerCore {
 
   options: SkinViewerOptions = {};
 
+  private disposed = false;
   private playAnim: boolean | number = false;
   private animTimeOffset: number = 0;
   private animPausedElapsed: number | null = null;
-  private stopTimer: ReturnType<typeof setTimeout> | null = null;
+  private isDragging = false;
+  private canvas: HTMLCanvasElement;
 
   constructor(canvas: HTMLCanvasElement, options: SkinViewerOptions = {}) {
     this.scene = new Scene();
@@ -81,8 +83,11 @@ export class SkinViewerCore {
     this.controls.enablePan = false;
     this.controls.rotateSpeed = 1.3;
 
+    this.canvas = canvas;
+    canvas.addEventListener('pointerdown', this.onPointerDown);
+    window.addEventListener('pointerup', this.onPointerUp);
+
     this.ready = this.update(options);
-    canvas.addEventListener('mousedown', () => this.startRenderLoop());
   }
 
   private getAnimElapsed(): number {
@@ -144,22 +149,29 @@ export class SkinViewerCore {
     this.renderer.render(this.scene, this.camera);
   }
 
+  private onPointerDown = () => {
+    this.isDragging = true;
+    this.startRenderLoop();
+  };
+
+  private onPointerUp = () => {
+    this.isDragging = false;
+    this.tryStopRenderLoop();
+  };
+
   startRenderLoop(): void {
     this.stopRenderLoop();
     this.renderer.setAnimationLoop(() => this.render());
-    this.timerStopRenderLoop();
   }
 
   stopRenderLoop(): void {
     this.renderer.setAnimationLoop(null);
   }
 
-  private timerStopRenderLoop(): void {
-    if (this.stopTimer) clearTimeout(this.stopTimer);
-    this.stopTimer = setTimeout(() => {
-      if (this.playAnim) return;
-      this.stopRenderLoop();
-    }, 10000);
+  private tryStopRenderLoop(): void {
+    if (this.isDragging || this.playAnim) return;
+    this.render();
+    this.stopRenderLoop();
   }
 
   private loadTexture(url: string): Promise<Texture> {
@@ -711,7 +723,7 @@ export class SkinViewerCore {
   pauseAnimation(): void {
     this.animPausedElapsed = this.getAnimElapsed();
     this.playAnim = false;
-    this.timerStopRenderLoop();
+    this.tryStopRenderLoop();
   }
 
   setAnimationTime(time: number): void {
@@ -738,6 +750,7 @@ export class SkinViewerCore {
       if (this.skinModel) this.scene.remove(this.skinModel);
 
       const model = await this.buildSkinModel(this.options.skinDataURL);
+      if (this.disposed) return;
       this.skinModel = model;
       this.scene.add(model);
       this.playAnim = 1;
@@ -758,6 +771,7 @@ export class SkinViewerCore {
       const model = this.options.elytra
         ? await this.buildElytraModel(this.options.capeDataURL)
         : await this.buildCapeModel(this.options.capeDataURL);
+      if (this.disposed) return;
 
       this.capeModel = model;
       this.scene.add(model);
@@ -788,8 +802,10 @@ export class SkinViewerCore {
   }
 
   dispose(): void {
+    this.disposed = true;
     this.stopRenderLoop();
-    if (this.stopTimer) clearTimeout(this.stopTimer);
+    this.canvas.removeEventListener('pointerdown', this.onPointerDown);
+    window.removeEventListener('pointerup', this.onPointerUp);
     this.controls.dispose();
     this.renderer.dispose();
 
