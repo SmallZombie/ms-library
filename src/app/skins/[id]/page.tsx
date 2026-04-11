@@ -142,11 +142,11 @@ export default function SkinDetailPage({ params }: { params: Promise<{ id: strin
         <h1 className='text-2xl font-bold'>{skin.name || `皮肤 #${skin.id}`}</h1>
       </div>
 
-      <div className='grid md:grid-cols-2 gap-6'>
-        <Card>
-          <CardContent className='p-6 space-y-4'>
-            <div className='flex justify-center'>
-              <SkinViewer
+      <div className='grid items-start md:grid-cols-2 gap-6'>
+        <Card className='pt-0'>
+          <CardContent className='space-y-4 p-0 pb-4'>
+            <div className='-flex justify-center'>
+              <SkinViewer className='w-full h-full'
                 key={`${skin.filePath}:${selectedCape?.filePath ?? 'no-cape'}`}
                 skinUrl={skinUrl}
                 capeUrl={capeUrl}
@@ -154,6 +154,7 @@ export default function SkinDetailPage({ params }: { params: Promise<{ id: strin
                 width={350}
                 height={600}
                 animate={isAnimating}
+                allowDrag={true}
               />
             </div>
             <div className='flex justify-center gap-2'>
@@ -178,7 +179,7 @@ export default function SkinDetailPage({ params }: { params: Promise<{ id: strin
           </CardContent>
         </Card>
 
-        <div className='space-y-4'>
+        <div className='space-y-4 min-w-0'>
           <Card>
             <CardHeader>
               <CardTitle className='text-lg'>基本信息</CardTitle>

@@ -21,7 +21,7 @@ export function SkinCard({ id, name, type, tags, filePath, slim, cape, asLink = 
   const capeUrl = cape ? `/api/files/${cape.filePath}` : void 0;
 
   const card = (
-    <Card className='group overflow-hidden transition-all hover:shadow-lg hover:-translate-y-0.5 gap-0 py-0'>
+    <Card className='group overflow-hidden transition-all hover:shadow-lg hover:-translate-y-0.5 gap-0'>
       <div className='flex justify-center bg-muted/30'>
         <SkinViewer
           className='pointer-events-none'

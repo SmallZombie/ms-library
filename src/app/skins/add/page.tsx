@@ -534,8 +534,8 @@ export default function AddSkinPage() {
 
           <div className='flex min-h-0 flex-col gap-6 md:max-h-[calc(100dvh-10rem)] md:flex-row md:items-stretch md:overflow-hidden'>
             <div className='flex min-h-0 w-full min-w-0 flex-col md:flex-1 md:overflow-hidden'>
-              <Card className='flex max-md:max-h-[min(24rem,55vh)] max-md:flex-none min-h-0 flex-1 flex-col gap-0 overflow-hidden py-4'>
-                <CardHeader className='shrink-0'>
+              <Card className='flex max-md:max-h-[min(24rem,55vh)] max-md:flex-none min-h-0 flex-1 flex-col overflow-hidden'>
+                <CardHeader>
                   <CardTitle className='text-lg'>文件列表</CardTitle>
                 </CardHeader>
                 <CardContent className='flex min-h-0 flex-1 flex-col overflow-hidden p-0'>
@@ -619,6 +619,7 @@ export default function AddSkinPage() {
                       width={280}
                       height={360}
                       animate={false}
+                      allowDrag={true}
                     />
                   </CardContent>
                 </Card>

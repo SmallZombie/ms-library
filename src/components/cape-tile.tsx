@@ -2,6 +2,7 @@
 
 import { Badge } from '@/components/ui/badge';
 import { cn } from '@/lib/utils';
+import Image from 'next/image';
 
 interface CapeTileProps {
   id: number;
@@ -34,9 +35,10 @@ export function CapeTile({
       )}
     >
       <div className='flex-shrink-0 w-12 h-12 rounded bg-muted/50 flex items-center justify-center overflow-hidden'>
-        {/* eslint-disable-next-line @next/next/no-img-element */}
-        <img
+        <Image
           src={imgUrl}
+          width={48}
+          height={48}
           alt={name || `Cape #${id}`}
           className='w-full h-full object-contain'
           style={{ imageRendering: 'pixelated' }}

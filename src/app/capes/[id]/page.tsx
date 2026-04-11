@@ -135,6 +135,7 @@ export default function CapeDetailPage({ params }: { params: Promise<{ id: strin
                   height={450}
                   animate={true}
                   cameraPosition={{ x: 0, y: 5, z: -30 }}
+                  allowDrag={true}
                 />
               </TabsContent>
               <TabsContent value='elytra' className='flex justify-center pt-4'>
@@ -145,6 +146,7 @@ export default function CapeDetailPage({ params }: { params: Promise<{ id: strin
                   height={450}
                   animate={true}
                   cameraPosition={{ x: 0, y: 5, z: -30 }}
+                  allowDrag={true}
                 />
               </TabsContent>
             </Tabs>

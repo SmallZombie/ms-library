@@ -18,7 +18,7 @@ export function CapeCard({ id, name, type, tags, filePath, asLink = true }: Cape
   const capeUrl = `/api/files/${filePath}`;
 
   const card = (
-    <Card className='group overflow-hidden transition-all hover:shadow-lg hover:-translate-y-0.5 gap-0 py-0'>
+    <Card className='group overflow-hidden transition-all hover:shadow-lg hover:-translate-y-0.5 gap-0'>
       <div className='flex justify-center bg-muted/30'>
         <SkinViewer className='pointer-events-none'
           capeUrl={capeUrl}

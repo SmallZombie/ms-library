@@ -202,8 +202,8 @@ export default function SkinsPage() {
   const totalPages = Math.ceil(total / PAGE_SIZE);
 
   return (
-    <div className='p-6 space-y-6 max-w-7xl mx-auto'>
-      <div className='flex items-center justify-between'>
+    <div className='p-6 space-y-4 max-w-7xl mx-auto'>
+      <div className='flex items-center justify-between flex-wrap whitespace-nowrap gap-2'>
         <h1 className='text-2xl font-bold'>皮肤库</h1>
         <div className='flex items-center gap-3'>
           <span className='text-sm text-muted-foreground'>共 {total} 个皮肤</span>

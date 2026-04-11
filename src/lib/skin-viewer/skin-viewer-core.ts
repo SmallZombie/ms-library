@@ -23,6 +23,8 @@ export interface SkinViewerOptions {
   slim?: boolean;
   elytra?: boolean;
   cameraPosition?: { x?: number; y?: number; z?: number };
+  eventTarget?: HTMLElement | null;
+  allowDrag?: boolean;
 }
 
 export class SkinViewerCore {
@@ -44,6 +46,8 @@ export class SkinViewerCore {
   private animPausedElapsed: number | null = null;
   private isDragging = false;
   private canvas: HTMLCanvasElement;
+
+  private eventTarget: HTMLElement;
 
   constructor(canvas: HTMLCanvasElement, options: SkinViewerOptions = {}) {
     this.scene = new Scene();
@@ -78,13 +82,15 @@ export class SkinViewerCore {
     }
     this.camera.lookAt(0, 0, 0);
 
-    this.controls = new OrbitControls(this.camera, this.renderer.domElement);
+    this.eventTarget = options.eventTarget ?? canvas;
+    this.controls = new OrbitControls(this.camera, this.eventTarget);
+    this.controls.enableRotate = options.allowDrag ?? false;
     this.controls.enableZoom = false;
     this.controls.enablePan = false;
     this.controls.rotateSpeed = 1.3;
 
     this.canvas = canvas;
-    canvas.addEventListener('pointerdown', this.onPointerDown);
+    this.eventTarget.addEventListener('pointerdown', this.onPointerDown);
     window.addEventListener('pointerup', this.onPointerUp);
 
     this.ready = this.update(options);
@@ -804,7 +810,7 @@ export class SkinViewerCore {
   dispose(): void {
     this.disposed = true;
     this.stopRenderLoop();
-    this.canvas.removeEventListener('pointerdown', this.onPointerDown);
+    this.eventTarget.removeEventListener('pointerdown', this.onPointerDown);
     window.removeEventListener('pointerup', this.onPointerUp);
     this.controls.dispose();
     this.renderer.dispose();

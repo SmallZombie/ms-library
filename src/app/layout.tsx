@@ -27,7 +27,7 @@ export default function RootLayout({
           <AuthProvider>
             <TooltipProvider>
               <Sidebar />
-              <main className='md:ml-56 min-h-screen pt-14 md:pt-0'>
+              <main className='md:ml-56 h-dvh pt-14 md:pt-0'>
                 {children}
               </main>
             </TooltipProvider>

@@ -58,7 +58,7 @@ export default function AdminUsersPage() {
 
       <div className='space-y-3'>
         {users.map(user => (
-          <Card key={user.id} className='gap-0 py-0'>
+          <Card key={user.id}>
             <CardContent className='flex items-center justify-between py-4'>
               <div className='space-y-1'>
                 <div className='flex items-center gap-2'>

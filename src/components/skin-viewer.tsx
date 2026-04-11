@@ -14,6 +14,7 @@ interface SkinViewerProps {
   height?: number;
   animate?: boolean;
   cameraPosition?: { x?: number; y?: number; z?: number };
+  allowDrag?: boolean;
 }
 
 export function SkinViewer({
@@ -26,7 +27,9 @@ export function SkinViewer({
   height = 400,
   animate = true,
   cameraPosition,
+  allowDrag = false,
 }: SkinViewerProps) {
+  const containerRef = useRef<HTMLDivElement>(null);
   const canvasRef = useRef<HTMLCanvasElement>(null);
   const viewerRef = useRef<SkinViewerCore | null>(null);
   const prevOptionsRef = useRef<SkinViewerOptions>({});
@@ -41,6 +44,8 @@ export function SkinViewer({
       slim,
       elytra,
       cameraPosition,
+      eventTarget: allowDrag ? containerRef.current : null,
+      allowDrag,
     };
 
     const viewer = new SkinViewerCore(canvas, initialOptions);
@@ -103,12 +108,14 @@ export function SkinViewer({
   }, [animate]);
 
   return (
-    <canvas
-      ref={canvasRef}
-      width={width}
-      height={height}
-      style={{ width, height }}
-      className={cn('rounded-lg', className)}
-    />
+    <div ref={containerRef} className='grid place-items-center'>
+      <canvas
+        ref={canvasRef}
+        width={width}
+        height={height}
+        style={{ width, height }}
+        className={cn('rounded-lg', className)}
+      />
+    </div>
   );
 }

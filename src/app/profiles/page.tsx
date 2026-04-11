@@ -57,13 +57,13 @@ export default function ProfilesPage() {
       ) : (
         <div className='space-y-3'>
           {profiles.map(profile => (
-            <Card key={profile.id} className='gap-0 py-0'>
+            <Card key={profile.id}>
               <CardContent className='flex items-center justify-between py-4'>
                 <div className='space-y-1'>
                   <div className='flex items-center gap-2'>
                     <span className='font-medium font-mono'>{profile.name}</span>
                   </div>
-                  <div className='flex items-center gap-3 text-sm text-muted-foreground'>
+                  <div className='flex items-center flex-wrap gap-x-3 text-sm text-muted-foreground'>
                     <span className='flex items-center gap-1'>
                       <User className='h-3 w-3' />
                       {profile.skin ? profile.skin.name || '未命名皮肤' : '无皮肤'}

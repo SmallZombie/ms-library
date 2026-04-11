@@ -456,7 +456,7 @@ export default function AddCapePage() {
 
               <div className='flex min-h-0 flex-col gap-6 md:max-h-[calc(100dvh-10rem)] md:flex-row md:items-stretch md:overflow-hidden'>
                 <div className='flex min-h-0 w-full min-w-0 flex-col md:flex-1 md:overflow-hidden'>
-                  <Card className='flex max-md:max-h-[min(24rem,55vh)] max-md:flex-none min-h-0 flex-1 flex-col gap-0 overflow-hidden py-4'>
+                  <Card className='flex max-md:max-h-[min(24rem,55vh)] max-md:flex-none min-h-0 flex-1 flex-col overflow-hidden'>
                     <CardHeader className='shrink-0'>
                       <CardTitle className='text-lg'>文件列表</CardTitle>
                     </CardHeader>
@@ -535,6 +535,7 @@ export default function AddCapePage() {
                           height={400}
                           animate={false}
                           cameraPosition={{ x: 0, y: 5, z: -30 }}
+                          allowDrag={true}
                         />
                       </CardContent>
                     </Card>

@@ -7,7 +7,7 @@ import { cn } from '@/lib/utils';
 import { useAuth } from './auth-provider';
 import { User, Shirt, Menu, X, Users, Settings, Shield, LogOut } from 'lucide-react';
 import { Button } from '@/components/ui/button';
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 
 const navItems = [
   { href: '/skins', label: '皮肤', icon: User },
@@ -25,6 +25,16 @@ export function Sidebar() {
   const router = useRouter();
   const { user, logout } = useAuth();
   const [mobileOpen, setMobileOpen] = useState(false);
+  const [siteName, setSiteName] = useState('');
+
+  useEffect(() => {
+    fetch('/api/settings/public')
+      .then(r => r.json())
+      .then(data => {
+        if (data.siteName) setSiteName(data.siteName);
+      })
+      .catch(() => {});
+  }, []);
 
   if (pathname === '/login' || pathname === '/register') return null;
 
@@ -45,7 +55,7 @@ export function Sidebar() {
             height={20}
             className='rounded-sm'
           />
-          <span>MSLibrary</span>
+          <span>{siteName}</span>
         </Link>
         <Button
           variant='ghost'
@@ -81,7 +91,7 @@ export function Sidebar() {
               height={20}
               className='rounded-sm'
             />
-            <span>MSLibrary</span>
+            <span>{siteName}</span>
           </Link>
         </div>
 
