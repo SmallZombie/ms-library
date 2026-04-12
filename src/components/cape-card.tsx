@@ -3,34 +3,44 @@
 import Link from 'next/link';
 import { Card, CardContent } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
-import { SkinViewer } from './skin-viewer';
+import { Skeleton } from '@/components/ui/skeleton';
+import Image from 'next/image';
 
 interface CapeCardProps {
   id: number;
-  name?: string | null;
-  type?: string | null;
+  cover?: string;
+  name: string;
+  type?: string;
   tags: string[];
-  filePath: string;
   asLink?: boolean;
 }
 
-export function CapeCard({ id, name, type, tags, filePath, asLink = true }: CapeCardProps) {
-  const capeUrl = `/api/files/${filePath}`;
-
+export function CapeCard({
+  id,
+  cover,
+  name,
+  type,
+  tags,
+  asLink = true,
+}: CapeCardProps) {
   const card = (
     <Card className='group overflow-hidden transition-all hover:shadow-lg hover:-translate-y-0.5 gap-0'>
       <div className='flex justify-center bg-muted/30'>
-        <SkinViewer className='pointer-events-none'
-          capeUrl={capeUrl}
-          width={180}
-          height={220}
-          animate={false}
-          cameraPosition={{ x: 0, y: 5, z: -30 }}
-        />
+        {cover ? (
+          <Image
+            src={cover}
+            alt={name}
+            width={180}
+            height={320}
+            className='pointer-events-none rounded-lg max-w-full h-auto'
+          />
+        ) : (
+          <Skeleton className='h-[320px] w-[180px] max-w-full rounded-lg' />
+        )}
       </div>
       <CardContent className='px-3 py-2.5 space-y-1.5'>
         <p className='font-medium text-sm truncate'>
-          {name || `披风 #${id}`}
+          {name}
         </p>
         <div className='flex flex-wrap gap-1'>
           {type && (

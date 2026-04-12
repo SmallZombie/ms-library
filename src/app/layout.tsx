@@ -4,6 +4,7 @@ import { AuthProvider } from '@/components/auth-provider';
 import { Sidebar } from '@/components/sidebar';
 import { TooltipProvider } from '@/components/ui/tooltip';
 import './globals.css';
+import './font.css';
 
 export const metadata: Metadata = {
   title: 'Minecraft Skin Library',

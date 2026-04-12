@@ -3,6 +3,7 @@
 import Link from 'next/link';
 import { useState, useEffect, useCallback } from 'react';
 import { CapeCard } from '@/components/cape-card';
+import { useCapeViewerSnapshots } from '@/hooks/use-skin-viewer-snapshots';
 import { Selectable } from '@/components/selectable';
 import { FilterBar } from '@/components/filter-bar';
 import { Pagination } from '@/components/pagination';
@@ -21,8 +22,8 @@ const PAGE_SIZE = 20;
 
 interface CapeItem {
   id: number;
-  name: string | null;
-  type: string | null;
+  name: string;
+  type?: string;
   tags: string[];
   filePath: string;
 }
@@ -182,6 +183,8 @@ export default function CapesPage() {
 
   const totalPages = Math.ceil(total / PAGE_SIZE);
 
+  const coverUrls = useCapeViewerSnapshots(loading ? null : capes);
+
   return (
     <div className='p-6 space-y-4 max-w-7xl mx-auto'>
       <div className='flex items-center justify-between flex-wrap whitespace-nowrap gap-2'>
@@ -328,10 +331,10 @@ export default function CapesPage() {
               >
                 <CapeCard
                   id={cape.id}
+                  cover={coverUrls[cape.id]}
                   name={cape.name}
                   type={cape.type}
                   tags={cape.tags}
-                  filePath={cape.filePath}
                   asLink={false}
                 />
               </Selectable>
@@ -339,10 +342,10 @@ export default function CapesPage() {
               <CapeCard
                 key={cape.id}
                 id={cape.id}
+                cover={coverUrls[cape.id]}
                 name={cape.name}
                 type={cape.type}
                 tags={cape.tags}
-                filePath={cape.filePath}
               />
             )
           )}

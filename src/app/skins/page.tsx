@@ -3,6 +3,7 @@
 import Link from 'next/link';
 import { useState, useEffect, useCallback } from 'react';
 import { SkinCard } from '@/components/skin-card';
+import { useSkinViewerSnapshots } from '@/hooks/use-skin-viewer-snapshots';
 import { Selectable } from '@/components/selectable';
 import { FilterBar } from '@/components/filter-bar';
 import { Pagination } from '@/components/pagination';
@@ -34,9 +35,9 @@ const PAGE_SIZE = 20;
 
 interface SkinItem {
   id: number;
-  name: string | null;
+  name: string;
   slim: boolean;
-  type: string | null;
+  type?: string;
   tags: string[];
   filePath: string;
   cape?: { filePath: string } | null;
@@ -201,6 +202,8 @@ export default function SkinsPage() {
 
   const totalPages = Math.ceil(total / PAGE_SIZE);
 
+  const coverUrls = useSkinViewerSnapshots(loading ? null : skins);
+
   return (
     <div className='p-6 space-y-4 max-w-7xl mx-auto'>
       <div className='flex items-center justify-between flex-wrap whitespace-nowrap gap-2'>
@@ -355,12 +358,10 @@ export default function SkinsPage() {
               >
                 <SkinCard
                   id={skin.id}
+                  cover={coverUrls[skin.id]}
                   name={skin.name}
                   type={skin.type}
                   tags={skin.tags}
-                  filePath={skin.filePath}
-                  slim={skin.slim}
-                  cape={skin.cape}
                   asLink={false}
                 />
               </Selectable>
@@ -368,12 +369,10 @@ export default function SkinsPage() {
               <SkinCard
                 key={skin.id}
                 id={skin.id}
+                cover={coverUrls[skin.id]}
                 name={skin.name}
                 type={skin.type}
                 tags={skin.tags}
-                filePath={skin.filePath}
-                slim={skin.slim}
-                cape={skin.cape}
               />
             )
           )}

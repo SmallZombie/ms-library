@@ -27,10 +27,13 @@ export async function GET(request: NextRequest) {
   if (type) {
     conditions.push(eq(schema.skins.type, type));
   }
+  for (const tag of tags) {
+    conditions.push(sql`EXISTS (SELECT 1 FROM json_each(${schema.skins.tags}) WHERE ${sql.raw('value')} = ${tag})`);
+  }
 
   const where = sql`${sql.join(conditions, sql` AND `)}`;
 
-  const [countResult, rows] = await Promise.all([
+  const [countResult, list] = await Promise.all([
     db.select({ count: sql<number>`COUNT(*)` })
       .from(schema.skins)
       .where(where),
@@ -41,14 +44,6 @@ export async function GET(request: NextRequest) {
       .limit(limit)
       .offset(offset),
   ]);
-
-  let list = rows;
-  if (tags.length > 0) {
-    list = rows.filter(row => {
-      const rowTags = row.tags as string[];
-      return tags.every(t => rowTags.includes(t));
-    });
-  }
 
   const skinsWithCapes = await Promise.all(
     list.map(async (skin) => {

@@ -35,7 +35,8 @@ export function radians(degrees: number): number {
 export function generateCapeUV() {
   const _pxX = (num: number) => num / 64;
   const _pxY = (num: number) => (32 - num) / 32;
-  return new Float32Array([
+
+  console.log('cape', [
     _pxX(0), _pxY(1), _pxX(1), _pxY(1), _pxX(0), _pxY(17), _pxX(1), _pxY(17),
     _pxX(11), _pxY(1), _pxX(12), _pxY(1), _pxX(11), _pxY(17), _pxX(12), _pxY(17),
     _pxX(1), _pxY(0), _pxX(11), _pxY(0), _pxX(1), _pxY(1), _pxX(11), _pxY(1),
@@ -45,4 +46,26 @@ export function generateCapeUV() {
   ]);
 }
 
-export function generateElytraUV() {}
+/** Generate UV for the elytra */
+export function generateElytraUV() {
+  const _pxX = (num: number) => num / 64;
+  const _pxY = (num: number) => (32 - num) / 32;
+
+  console.log('left', [
+    _pxX(24), _pxY(2), _pxX(22), _pxY(2), _pxX(24), _pxY(22), _pxX(22), _pxY(22),
+    _pxX(36), _pxY(2), _pxX(34), _pxY(2), _pxX(36), _pxY(22), _pxX(34), _pxY(22),
+    _pxX(34), _pxY(0), _pxX(24), _pxY(0), _pxX(34), _pxY(2), _pxX(24), _pxY(2),
+    _pxX(44), _pxY(2), _pxX(34), _pxY(2), _pxX(44), _pxY(0), _pxX(34), _pxY(0),
+    _pxX(34), _pxY(2), _pxX(24), _pxY(2), _pxX(34), _pxY(22), _pxX(24), _pxY(22),
+    _pxX(46), _pxY(2), _pxX(36), _pxY(2), _pxX(46), _pxY(22), _pxX(36), _pxY(22),
+  ]);
+
+  console.log('right', [
+    _pxX(34), _pxY(2), _pxX(36), _pxY(2), _pxX(34), _pxY(22), _pxX(36), _pxY(22),
+    _pxX(22), _pxY(2), _pxX(24), _pxY(2), _pxX(22), _pxY(22), _pxX(24), _pxY(22),
+    _pxX(24), _pxY(0), _pxX(34), _pxY(0), _pxX(24), _pxY(2), _pxX(34), _pxY(2),
+    _pxX(34), _pxY(2), _pxX(44), _pxY(2), _pxX(34), _pxY(0), _pxX(44), _pxY(0),
+    _pxX(24), _pxY(2), _pxX(34), _pxY(2), _pxX(24), _pxY(22), _pxX(34), _pxY(22),
+    _pxX(36), _pxY(2), _pxX(46), _pxY(2), _pxX(36), _pxY(22), _pxX(46), _pxY(22),
+  ]);
+}

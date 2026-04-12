@@ -59,11 +59,13 @@ export class SkinViewerCore {
     });
     const dpr = typeof window !== 'undefined' ? window.devicePixelRatio || 1 : 1;
     this.renderer.setPixelRatio(dpr);
-    this.renderer.setSize(canvas.clientWidth, canvas.clientHeight);
+    const layoutW = Math.max(canvas.clientWidth || canvas.width || 300, 1);
+    const layoutH = Math.max(canvas.clientHeight || canvas.height || 150, 1);
+    this.renderer.setSize(layoutW, layoutH);
 
     this.camera = new PerspectiveCamera(
       75,
-      canvas.clientWidth / canvas.clientHeight,
+      layoutW / layoutH,
       0.1,
       1000
     );
@@ -667,9 +669,7 @@ export class SkinViewerCore {
   }
 
   private async buildElytraModel(capeURL: string): Promise<Group> {
-    const texture = await this.loadTexture(capeURL);
-    const _pxX = (num: number) => num / 64;
-    const _pxY = (num: number) => (32 - num) / 32;
+    const texture = await this.getCapeTexture(capeURL);
 
     const elytraGroup = new Group();
     elytraGroup.rotation.set(radians(15), 0, 0);
@@ -679,12 +679,18 @@ export class SkinViewerCore {
     const leftGeo = texturePainting(
       new BoxGeometry(9, 20, 3),
       new Float32Array([
-        _pxX(24), _pxY(2), _pxX(22), _pxY(2), _pxX(24), _pxY(22), _pxX(22), _pxY(22),
-        _pxX(36), _pxY(2), _pxX(34), _pxY(2), _pxX(36), _pxY(22), _pxX(34), _pxY(22),
-        _pxX(34), _pxY(0), _pxX(24), _pxY(0), _pxX(34), _pxY(2), _pxX(24), _pxY(2),
-        _pxX(44), _pxY(2), _pxX(34), _pxY(2), _pxX(44), _pxY(0), _pxX(34), _pxY(0),
-        _pxX(34), _pxY(2), _pxX(24), _pxY(2), _pxX(34), _pxY(22), _pxX(24), _pxY(22),
-        _pxX(46), _pxY(2), _pxX(36), _pxY(2), _pxX(46), _pxY(22), _pxX(36), _pxY(22),
+        0.375, 0.9375, 0.34375, 0.9375,
+        0.375, 0.3125, 0.34375, 0.3125,
+        0.5625, 0.9375, 0.53125, 0.9375,
+        0.5625, 0.3125, 0.53125, 0.3125,
+        0.53125, 1, 0.375, 1,
+        0.53125, 0.9375, 0.375, 0.9375,
+        0.6875, 0.9375, 0.53125, 0.9375,
+        0.6875, 1, 0.53125, 1,
+        0.53125, 0.9375, 0.375, 0.9375,
+        0.53125, 0.3125, 0.375, 0.3125,
+        0.71875, 0.9375, 0.5625, 0.9375,
+        0.71875, 0.3125, 0.5625, 0.3125
       ]),
       texture,
       { alpha: true, doubleSide: true }
@@ -695,12 +701,18 @@ export class SkinViewerCore {
     const rightGeo = texturePainting(
       new BoxGeometry(9, 20, 3),
       new Float32Array([
-        _pxX(34), _pxY(2), _pxX(36), _pxY(2), _pxX(34), _pxY(22), _pxX(36), _pxY(22),
-        _pxX(22), _pxY(2), _pxX(24), _pxY(2), _pxX(22), _pxY(22), _pxX(24), _pxY(22),
-        _pxX(24), _pxY(0), _pxX(34), _pxY(0), _pxX(24), _pxY(2), _pxX(34), _pxY(2),
-        _pxX(34), _pxY(2), _pxX(44), _pxY(2), _pxX(34), _pxY(0), _pxX(44), _pxY(0),
-        _pxX(24), _pxY(2), _pxX(34), _pxY(2), _pxX(24), _pxY(22), _pxX(34), _pxY(22),
-        _pxX(36), _pxY(2), _pxX(46), _pxY(2), _pxX(36), _pxY(22), _pxX(46), _pxY(22),
+        0.53125, 0.9375, 0.5625, 0.9375,
+        0.53125, 0.3125, 0.5625, 0.3125,
+        0.34375, 0.9375, 0.375, 0.9375,
+        0.34375, 0.3125, 0.375, 0.3125,
+        0.375, 1, 0.53125, 1,
+        0.375, 0.9375, 0.53125, 0.9375,
+        0.53125, 0.9375, 0.6875, 0.9375,
+        0.53125, 1, 0.6875, 1,
+        0.375, 0.9375, 0.53125, 0.9375,
+        0.375, 0.3125, 0.53125, 0.3125,
+        0.5625, 0.9375, 0.71875, 0.9375,
+        0.5625, 0.3125, 0.71875, 0.3125
       ]),
       texture,
       { alpha: true, doubleSide: true }

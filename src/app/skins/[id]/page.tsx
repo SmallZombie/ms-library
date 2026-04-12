@@ -16,7 +16,7 @@ import {
   Dialog,
   DialogTrigger,
 } from '@/components/ui/dialog';
-import { ArrowLeft, Save, Trash2, ExternalLink, Link2, Unlink, Loader2, Pause, Play, Download } from 'lucide-react';
+import { ArrowLeft, Save, Trash2, ExternalLink, Link2, Unlink, Pause, Play, Download } from 'lucide-react';
 
 interface SkinData {
   id: number;
